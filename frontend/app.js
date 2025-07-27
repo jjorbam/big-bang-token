@@ -964,13 +964,42 @@ async function loadContractAddress() {
 
 // Conectar wallet
 async function connectWallet() {
-    console.log('🔗 Botón de conectar wallet presionado');
-    console.log('📋 Estado inicial:', {
-        ethereum: !!window.ethereum,
-        web3: !!web3,
-        userAccount: userAccount,
-        contractAddress: contractAddress
-    });
+    console.log('🔗 Iniciando conexión de wallet...');
+    console.log('📱 Información del dispositivo:');
+    console.log('   User Agent:', navigator.userAgent);
+    console.log('   Es móvil:', isMobile);
+    console.log('   Es iOS:', isIOS);
+    console.log('   Es Chrome:', isChrome);
+    console.log('   Es Safari:', isSafari);
+    console.log('   URL actual:', window.location.href);
+    
+    // Verificar si MetaMask está disponible
+    if (!window.ethereum) {
+        console.log('❌ MetaMask no detectado');
+        
+        if (isMobile) {
+            console.log('📱 Dispositivo móvil detectado - mostrando instrucciones específicas');
+            if (isIOS && isChrome) {
+                console.log('🍎 iOS Chrome detectado - MetaMask no funciona aquí');
+                showIOSChromeInstructions();
+            } else if (isIOS && isSafari) {
+                console.log('🍎 iOS Safari detectado - intentando deep link');
+                showIOSSafariInstructions();
+            } else {
+                console.log('📱 Android/otro móvil detectado - mostrando instrucciones móviles');
+                showMobileMetaMaskInstructions();
+            }
+        } else {
+            console.log('💻 Desktop detectado - mostrando instrucciones de instalación');
+            showMetaMaskInstallInstructions();
+        }
+        return;
+    }
+
+    console.log('✅ MetaMask detectado');
+    console.log('📋 Tipo de ethereum:', typeof window.ethereum);
+    console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
+    console.log('🚀 Versión de la app: 1.0.4 - Cache busting forzado');
     
     try {
         showLoading('Conectando wallet...');
@@ -1832,10 +1861,12 @@ async function tryConnectMetaMaskMobile() {
         console.log('🔗 Universal link creado:', universalLink);
         
         // Intentar abrir MetaMask Mobile con deep link
+        console.log('🔗 Intentando abrir MetaMask con deep link...');
         window.location.href = deepLink;
         
         // Detectar si se abrió correctamente
         const appOpened = await detectMetaMaskAppOpen();
+        console.log('🔗 App abierta:', appOpened);
         
         if (!appOpened) {
             console.log('🔄 Intentando universal link como fallback');
@@ -1852,6 +1883,7 @@ async function tryConnectMetaMaskMobile() {
             
             // Verificar conexión cuando regresemos
             setTimeout(() => {
+                console.log('🔄 Verificando conexión después de regresar...');
                 checkMobileConnection();
             }, 3000);
             
@@ -1983,64 +2015,65 @@ async function connectViaDeepLink() {
 
 // Función para mostrar instrucciones específicas para iOS en Safari
 function showIOSSafariInstructions() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'iosSafariModal';
+    console.log('🍎 Mostrando instrucciones para iOS Safari...');
     
-    modal.innerHTML = `
+    const modalContent = `
         <div class="modal-content">
-            <h3>📱 iOS + Safari = Conectar Wallet</h3>
-            <p>En iOS Safari, puedes conectar MetaMask de varias formas:</p>
+            <h3>📱 Conectar MetaMask en Safari iOS</h3>
+            <h4>MetaMask no funciona directamente en Safari iOS</h4>
             
-            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">🚀 Opción 1: Deep Link (Recomendado)</h4>
-                <p>Si tienes MetaMask instalado, intenta conectar directamente:</p>
-                <div style="text-align: center; margin: 15px 0;">
-                    <button class="btn btn-primary" id="deepLinkBtn" style="margin: 10px;">
-                        🔗 Conectar con MetaMask Mobile
-                    </button>
-                </div>
-            </div>
+            <ol>
+                <li><strong>Opción 1 (Recomendada):</strong> Usa la app MetaMask
+                    <ul>
+                        <li>Abre la app MetaMask en tu iPhone</li>
+                        <li>Ve a Configuración → Navegador</li>
+                        <li>Habilita el navegador interno</li>
+                        <li>Regresa aquí desde la app MetaMask</li>
+                    </ul>
+                </li>
+                <li><strong>Opción 2:</strong> Intenta conectar directamente
+                    <ul>
+                        <li>Presiona el botón de abajo</li>
+                        <li>Si tienes MetaMask instalado, se abrirá</li>
+                        <li>Confirma la conexión en la app</li>
+                    </ul>
+                </li>
+            </ol>
             
-            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">📱 Opción 2: Usar MetaMask App</h4>
-                <ol>
-                    <li>Instala MetaMask desde App Store</li>
-                    <li>Abre la aplicación MetaMask</li>
-                    <li>Ve a la pestaña "Browser" (Navegador)</li>
-                    <li>Escribe: <strong>big-bang-token.vercel.app</strong></li>
-                    <li>Navega a la web desde MetaMask</li>
-                    <li>Haz clic en "Conectar Wallet"</li>
-                </ol>
-            </div>
-            
-            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">🔗 Descargar MetaMask</h4>
-                <div style="text-align: center; margin: 15px 0;">
-                    <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
-                        📥 App Store - MetaMask
-                    </a>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
+            <div class="modal-actions">
+                <button id="deepLinkBtn" class="btn btn-primary">
+                    🔗 Conectar con MetaMask Mobile
+                </button>
                 <button class="btn btn-secondary" onclick="closeModal('iosSafariModal')">
-                    Cerrar
+                    ❌ Cancelar
                 </button>
             </div>
         </div>
     `;
     
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.id = 'iosSafariModal';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = modalContent;
+    
+    // Agregar al DOM
     document.body.appendChild(modal);
     
-    // Event listener para el botón de deep link
-    const deepLinkBtn = modal.querySelector('#deepLinkBtn');
-    if (deepLinkBtn) {
-        deepLinkBtn.addEventListener('click', async () => {
-            console.log('🔗 Botón de deep link presionado en Safari iOS');
-            await tryConnectMetaMaskMobile();
-        });
-    }
+    // Agregar event listener al botón
+    setTimeout(() => {
+        const deepLinkBtn = document.getElementById('deepLinkBtn');
+        if (deepLinkBtn) {
+            console.log('🔗 Agregando event listener al botón deep link...');
+            deepLinkBtn.addEventListener('click', () => {
+                console.log('🔗 Botón deep link presionado');
+                tryConnectMetaMaskMobile();
+            });
+        } else {
+            console.log('❌ No se encontró el botón deep link');
+        }
+    }, 100);
     
     // Cerrar con Escape
     const handleEscape = (e) => {
@@ -2051,12 +2084,7 @@ function showIOSSafariInstructions() {
     };
     document.addEventListener('keydown', handleEscape);
     
-    // Cerrar al hacer clic fuera del modal
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal('iosSafariModal');
-        }
-    });
+    console.log('✅ Modal de instrucciones iOS Safari mostrado');
 }
 
 // Función para mostrar instrucciones específicas para iOS en Chrome
