@@ -183,6 +183,25 @@ body::before {
     z-index: -1;
 }
 
+/* Fondo negro para móviles */
+@media (max-width: 767px) {
+    body {
+        background: #000000 !important;
+    }
+    
+    html {
+        background: #000000 !important;
+    }
+    
+    body::before {
+        background: #000000 !important;
+    }
+    
+    .container {
+        background: #000000 !important;
+    }
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
