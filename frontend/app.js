@@ -963,9 +963,9 @@ async function connectWallet() {
                 showIOSChromeInstructions();
                 return;
             } else if (isIOS && isSafari) {
-                console.log('📱 Detectado iOS en Safari - MetaMask no funciona en Safari iOS');
+                console.log('📱 Detectado iOS en Safari - Intentando conectar con MetaMask Mobile');
                 hideLoading();
-                showIOSSafariInstructions();
+                await tryConnectMetaMaskMobile();
                 return;
             } else if (isMobile) {
                 console.log('📱 Detectado dispositivo móvil');
@@ -1778,6 +1778,79 @@ window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
 window.showLoading = showLoading;
+window.tryConnectMetaMaskMobile = tryConnectMetaMaskMobile;
+
+// Función para intentar conectar con MetaMask Mobile desde Safari iOS
+async function tryConnectMetaMaskMobile() {
+    console.log('🔗 Intentando conectar con MetaMask Mobile...');
+    
+    // Verificar si MetaMask Mobile está instalado
+    const metamaskInstalled = await checkMetaMaskMobileInstalled();
+    
+    if (metamaskInstalled) {
+        console.log('✅ MetaMask Mobile detectado, intentando deep link...');
+        await connectViaDeepLink();
+    } else {
+        console.log('❌ MetaMask Mobile no detectado, mostrando instrucciones...');
+        showIOSSafariInstructions();
+    }
+}
+
+// Función para verificar si MetaMask Mobile está instalado
+async function checkMetaMaskMobileInstalled() {
+    return new Promise((resolve) => {
+        // Intentar abrir MetaMask Mobile con un deep link de prueba
+        const testUrl = 'metamask://';
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = testUrl;
+        
+        let timeout;
+        const checkInstalled = () => {
+            clearTimeout(timeout);
+            document.body.removeChild(iframe);
+            resolve(true);
+        };
+        
+        timeout = setTimeout(() => {
+            document.body.removeChild(iframe);
+            resolve(false);
+        }, 1000);
+        
+        iframe.onload = checkInstalled;
+        iframe.onerror = () => {
+            clearTimeout(timeout);
+            document.body.removeChild(iframe);
+            resolve(false);
+        };
+        
+        document.body.appendChild(iframe);
+    });
+}
+
+// Función para conectar via deep link
+async function connectViaDeepLink() {
+    try {
+        showLoading('Conectando con MetaMask Mobile...');
+        
+        // Crear deep link para conectar wallet
+        const deepLink = `metamask://dapp/${encodeURIComponent(window.location.href)}`;
+        
+        // Intentar abrir MetaMask Mobile
+        window.location.href = deepLink;
+        
+        // Esperar respuesta
+        setTimeout(() => {
+            hideLoading();
+            showSuccess('MetaMask Mobile abierto. Por favor, confirma la conexión en la app.');
+        }, 2000);
+        
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Error con deep link:', error);
+        showError('Error al conectar con MetaMask Mobile. Intenta desde la app directamente.');
+    }
+}
 
 // Función para mostrar instrucciones específicas para iOS en Safari
 function showIOSSafariInstructions() {
@@ -1787,25 +1860,33 @@ function showIOSSafariInstructions() {
     
     modal.innerHTML = `
         <div class="modal-content">
-            <h3>📱 iOS + Safari = MetaMask App</h3>
-            <p>En iOS, MetaMask solo funciona desde la aplicación MetaMask. Necesitas usar la app:</p>
+            <h3>📱 iOS + Safari = Conectar Wallet</h3>
+            <p>En iOS Safari, puedes conectar MetaMask de varias formas:</p>
             
             <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">📱 Usar MetaMask App</h4>
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">🚀 Opción 1: Deep Link (Recomendado)</h4>
+                <p>Si tienes MetaMask instalado, intenta conectar directamente:</p>
+                <div style="text-align: center; margin: 15px 0;">
+                    <button class="btn btn-primary" onclick="tryConnectMetaMaskMobile()" style="margin: 10px;">
+                        🔗 Conectar con MetaMask Mobile
+                    </button>
+                </div>
+            </div>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">📱 Opción 2: Usar MetaMask App</h4>
                 <ol>
                     <li>Instala MetaMask desde App Store</li>
                     <li>Abre la aplicación MetaMask</li>
                     <li>Ve a la pestaña "Browser" (Navegador)</li>
-                    <li>Escribe en la barra de direcciones: <strong>big-bang-token.vercel.app</strong></li>
+                    <li>Escribe: <strong>big-bang-token.vercel.app</strong></li>
                     <li>Navega a la web desde MetaMask</li>
                     <li>Haz clic en "Conectar Wallet"</li>
-                    <li>La conexión funcionará automáticamente</li>
                 </ol>
             </div>
             
             <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">🔗 Enlaces Directos</h4>
-                <p>Descarga MetaMask para iOS:</p>
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">🔗 Descargar MetaMask</h4>
                 <div style="text-align: center; margin: 15px 0;">
                     <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
                         📥 App Store - MetaMask
@@ -1813,14 +1894,9 @@ function showIOSSafariInstructions() {
                 </div>
             </div>
             
-            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 15px;">💡 ¿Por qué no funciona en Safari?</h4>
-                <p>Apple restringe el acceso a wallets en Safari iOS por seguridad. Solo las apps nativas pueden acceder a MetaMask.</p>
-            </div>
-            
             <div style="text-align: center; margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeModal('iosSafariModal')">
-                    Entendido
+                    Cerrar
                 </button>
             </div>
         </div>
