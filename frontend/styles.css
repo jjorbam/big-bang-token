@@ -228,9 +228,9 @@ body::before {
     transform: scale(1.05);
 }
 
-/* Estilos para el nuevo logo */
+/* Estilos para el logo en blanco */
 .st0 {
-    fill: #fcfcfc;
+    fill: #ffffff;
 }
 
 /* Logo principal en el header */
