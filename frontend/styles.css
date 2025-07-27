@@ -1357,14 +1357,17 @@ body::before {
     }
     
     .wallet-section {
-        flex-direction: column;
+        flex-direction: row;
         gap: var(--spacing-sm);
         width: 100%;
+        align-items: center;
+        justify-content: space-between;
     }
     
     .language-selector {
         order: 1;
-        width: 100%;
+        width: auto;
+        flex: 1;
     }
     
     .language-select {
@@ -1374,8 +1377,10 @@ body::before {
     
     #connectWallet {
         order: 2;
-        width: 100%;
+        width: auto;
         font-size: 0.9rem;
+        flex: 1;
+        margin: 0 var(--spacing-sm);
     }
     
     .wallet-info {
@@ -1383,6 +1388,7 @@ body::before {
         width: 100%;
         flex-direction: column;
         gap: var(--spacing-xs);
+        margin-top: var(--spacing-sm);
     }
     
     .nav {
@@ -1410,12 +1416,13 @@ body::before {
     }
     
     .menu-toggle {
-        order: 5;
+        order: 2;
         display: block;
-        width: 100%;
-        margin-top: var(--spacing-sm);
+        width: auto;
+        margin: 0;
         background: rgba(0, 212, 255, 0.2);
         border: 1px solid var(--primary-neon);
+        flex: 0 0 auto;
     }
     
     .section-header h1 {
@@ -1562,6 +1569,36 @@ body::before {
     
     .modal-content p {
         font-size: 0.9rem;
+    }
+    
+    .wallet-section {
+        flex-direction: row;
+        gap: var(--spacing-xs);
+        align-items: center;
+    }
+    
+    .language-selector {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .language-select {
+        font-size: 0.8rem;
+        padding: var(--spacing-xs);
+    }
+    
+    #connectWallet {
+        flex: 1;
+        font-size: 0.8rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        margin: 0 var(--spacing-xs);
+    }
+    
+    .menu-toggle {
+        flex: 0 0 auto;
+        font-size: 0.8rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-width: 44px;
     }
 }
 
