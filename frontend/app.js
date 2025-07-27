@@ -1816,16 +1816,34 @@ async function tryConnectMetaMaskMobile() {
     try {
         showLoading('Conectando con MetaMask Mobile...');
         
-        // Crear deep link con parámetros específicos para conexión
-        const deepLink = `metamask://dapp/${encodeURIComponent(window.location.href)}?action=connect`;
-        console.log('🔗 Deep link creado:', deepLink);
-        
         // Guardar estado de conexión en localStorage
         localStorage.setItem('metamask_connecting', 'true');
         localStorage.setItem('metamask_connect_time', Date.now().toString());
         
-        // Intentar abrir MetaMask Mobile
+        // Intentar múltiples métodos según la documentación oficial
+        const currentUrl = encodeURIComponent(window.location.href);
+        
+        // Método 1: Deep link directo (recomendado por MetaMask)
+        const deepLink = `metamask://dapp/${currentUrl}`;
+        console.log('🔗 Deep link creado:', deepLink);
+        
+        // Método 2: Universal link como fallback
+        const universalLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        console.log('🔗 Universal link creado:', universalLink);
+        
+        // Intentar abrir MetaMask Mobile con deep link
         window.location.href = deepLink;
+        
+        // Detectar si se abrió correctamente
+        const appOpened = await detectMetaMaskAppOpen();
+        
+        if (!appOpened) {
+            console.log('🔄 Intentando universal link como fallback');
+            window.location.href = universalLink;
+            
+            // Detectar nuevamente
+            await detectMetaMaskAppOpen();
+        }
         
         // Esperar y verificar si regresamos
         setTimeout(() => {
@@ -1883,6 +1901,28 @@ async function checkMobileConnection() {
         console.error('❌ Error verificando conexión:', error);
         showError('Error al verificar la conexión. Por favor, intenta de nuevo.');
     }
+}
+
+// Función para detectar si MetaMask Mobile se abrió correctamente
+function detectMetaMaskAppOpen() {
+    return new Promise((resolve) => {
+        const startTime = Date.now();
+        
+        // Verificar si la página se ocultó (indicando que se abrió la app)
+        const checkVisibility = () => {
+            if (document.hidden) {
+                console.log('✅ MetaMask Mobile detectado como abierto');
+                resolve(true);
+            } else if (Date.now() - startTime > 3000) {
+                console.log('❌ Timeout: MetaMask Mobile no se abrió');
+                resolve(false);
+            } else {
+                setTimeout(checkVisibility, 100);
+            }
+        };
+        
+        checkVisibility();
+    });
 }
 
 // Función para verificar si MetaMask Mobile está instalado
