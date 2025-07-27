@@ -789,6 +789,9 @@ function initializeLanguage() {
 async function initializeApp() {
     console.log('🚀 Inicializando BIG BANG Token App...');
     
+    // Verificar si estamos regresando de MetaMask Mobile
+    checkIfReturningFromMetaMask();
+    
     // Verificar si MetaMask está instalado
     if (typeof window.ethereum !== 'undefined') {
         console.log('✅ MetaMask detectado');
@@ -796,6 +799,32 @@ async function initializeApp() {
     } else {
         console.log('❌ MetaMask no detectado');
         showError('Por favor instala MetaMask para usar esta aplicación');
+    }
+}
+
+// Función para verificar si estamos regresando de MetaMask Mobile
+function checkIfReturningFromMetaMask() {
+    console.log('🔍 Verificando si regresamos de MetaMask Mobile...');
+    
+    const isConnecting = localStorage.getItem('metamask_connecting');
+    const connectTime = localStorage.getItem('metamask_connect_time');
+    
+    if (isConnecting && connectTime) {
+        const timeDiff = Date.now() - parseInt(connectTime);
+        
+        // Si han pasado menos de 5 minutos, verificar conexión
+        if (timeDiff < 5 * 60 * 1000) {
+            console.log('🔄 Detectado regreso de MetaMask Mobile');
+            
+            // Esperar un poco para que MetaMask se inicialice
+            setTimeout(() => {
+                checkMobileConnection();
+            }, 2000);
+        } else {
+            // Limpiar estado si ha pasado mucho tiempo
+            localStorage.removeItem('metamask_connecting');
+            localStorage.removeItem('metamask_connect_time');
+        }
     }
 }
 
@@ -1787,23 +1816,72 @@ async function tryConnectMetaMaskMobile() {
     try {
         showLoading('Conectando con MetaMask Mobile...');
         
-        // Intentar deep link directamente sin verificar
-        const deepLink = `metamask://dapp/${encodeURIComponent(window.location.href)}`;
+        // Crear deep link con parámetros específicos para conexión
+        const deepLink = `metamask://dapp/${encodeURIComponent(window.location.href)}?action=connect`;
         console.log('🔗 Deep link creado:', deepLink);
+        
+        // Guardar estado de conexión en localStorage
+        localStorage.setItem('metamask_connecting', 'true');
+        localStorage.setItem('metamask_connect_time', Date.now().toString());
         
         // Intentar abrir MetaMask Mobile
         window.location.href = deepLink;
         
-        // Esperar un poco y mostrar mensaje
+        // Esperar y verificar si regresamos
         setTimeout(() => {
             hideLoading();
-            showSuccess('MetaMask Mobile abierto. Por favor, confirma la conexión en la app.');
+            showSuccess('MetaMask Mobile abierto. Por favor, confirma la conexión en la app y regresa aquí.');
+            
+            // Verificar conexión cuando regresemos
+            setTimeout(() => {
+                checkMobileConnection();
+            }, 3000);
+            
         }, 2000);
         
     } catch (error) {
         hideLoading();
         console.error('❌ Error con deep link:', error);
         showError('Error al conectar con MetaMask Mobile. Intenta desde la app directamente.');
+    }
+}
+
+// Función para verificar conexión después de regresar de MetaMask Mobile
+async function checkMobileConnection() {
+    console.log('🔍 Verificando conexión después de regresar de MetaMask Mobile...');
+    
+    try {
+        // Verificar si MetaMask está disponible
+        if (window.ethereum) {
+            console.log('✅ MetaMask detectado después del deep link');
+            
+            // Intentar obtener cuentas
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+            
+            if (accounts && accounts.length > 0) {
+                console.log('✅ Cuentas obtenidas:', accounts);
+                
+                // Conectar con la primera cuenta
+                await connectSelectedAccount(accounts[0]);
+                
+                // Limpiar estado
+                localStorage.removeItem('metamask_connecting');
+                localStorage.removeItem('metamask_connect_time');
+                
+            } else {
+                console.log('❌ No se obtuvieron cuentas');
+                showError('No se pudieron obtener las cuentas. Por favor, intenta de nuevo.');
+            }
+        } else {
+            console.log('❌ MetaMask no disponible después del deep link');
+            showError('MetaMask no está disponible. Por favor, instala la app y vuelve a intentar.');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error verificando conexión:', error);
+        showError('Error al verificar la conexión. Por favor, intenta de nuevo.');
     }
 }
 
