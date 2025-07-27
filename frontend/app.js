@@ -4,6 +4,12 @@ let bigBangContract;
 let userAccount;
 let contractAddress;
 
+// Detección de dispositivo
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const isChrome = /Chrome/i.test(navigator.userAgent);
+const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
+
 // ABI completo del contrato BigBangToken
 const CONTRACT_ABI = [
     {
@@ -964,14 +970,13 @@ async function loadContractAddress() {
 
 // Conectar wallet
 async function connectWallet() {
-    console.log('🔗 Iniciando conexión de wallet...');
-    console.log('📱 Información del dispositivo:');
-    console.log('   User Agent:', navigator.userAgent);
-    console.log('   Es móvil:', isMobile);
-    console.log('   Es iOS:', isIOS);
-    console.log('   Es Chrome:', isChrome);
-    console.log('   Es Safari:', isSafari);
-    console.log('   URL actual:', window.location.href);
+    console.log('🔗 Botón de conectar wallet presionado');
+    console.log('📋 Estado inicial:', {
+        ethereum: !!window.ethereum,
+        web3: !!web3,
+        userAccount: userAccount,
+        contractAddress: contractAddress
+    });
     
     // Verificar si MetaMask está disponible
     if (!window.ethereum) {
@@ -1005,42 +1010,7 @@ async function connectWallet() {
         showLoading('Conectando wallet...');
         console.log('📋 Mostrando loading...');
         
-        // Verificar si MetaMask está instalado
-        if (!window.ethereum) {
-            console.log('❌ MetaMask no detectado en desktop');
-            
-            // Detectar si estamos en móvil y específicamente iOS
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const isChrome = /Chrome/i.test(navigator.userAgent);
-            const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
-            
-            if (isIOS && isChrome) {
-                console.log('📱 Detectado iOS en Chrome - MetaMask no funciona en Chrome iOS');
-                hideLoading();
-                showIOSChromeInstructions();
-                return;
-            } else if (isIOS && isSafari) {
-                console.log('📱 Detectado iOS en Safari - Mostrando opciones de conexión');
-                hideLoading();
-                showIOSSafariInstructions();
-                return;
-            } else if (isMobile) {
-                console.log('📱 Detectado dispositivo móvil');
-                hideLoading();
-                showMobileMetaMaskInstructions();
-                return;
-            } else {
-                hideLoading();
-                showMetaMaskInstallInstructions();
-                return;
-            }
-        }
-
         console.log('✅ MetaMask detectado, solicitando cuentas...');
-        console.log('📋 Tipo de ethereum:', typeof window.ethereum);
-        console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
-        console.log('🚀 Versión de la app: 1.0.4 - Cache busting forzado');
 
         // Timeout para evitar que se quede colgado
         const timeoutPromise = new Promise((_, reject) => {
