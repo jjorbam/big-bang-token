@@ -936,6 +936,12 @@ async function loadContractAddress() {
 // Conectar wallet
 async function connectWallet() {
     console.log('🔗 Botón de conectar wallet presionado');
+    console.log('📋 Estado inicial:', {
+        ethereum: !!window.ethereum,
+        web3: !!web3,
+        userAccount: userAccount,
+        contractAddress: contractAddress
+    });
     
     try {
         showLoading('Conectando wallet...');
@@ -950,6 +956,8 @@ async function connectWallet() {
         }
 
         console.log('✅ MetaMask detectado, solicitando cuentas...');
+        console.log('📋 Tipo de ethereum:', typeof window.ethereum);
+        console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
 
         // Timeout para evitar que se quede colgado
         const timeoutPromise = new Promise((_, reject) => {
@@ -987,8 +995,8 @@ async function connectWallet() {
         
         console.log('✅ Cuenta seleccionada:', selectedAccount);
         
-        // La conexión se maneja en connectSelectedAccount
-        // No necesitamos hacer nada más aquí
+        // Conectar con la cuenta seleccionada
+        await connectSelectedAccount(selectedAccount);
         
     } catch (error) {
         console.error('❌ Error conectando wallet:', error);
@@ -1652,6 +1660,92 @@ async function showAccountSelector(accounts, targetWallet) {
             }
         });
     });
+}
+
+// Función para conectar la cuenta seleccionada
+async function connectSelectedAccount(selectedAccount) {
+    try {
+        showLoading('Conectando cuenta seleccionada...');
+        console.log('🔗 Iniciando conexión con cuenta:', selectedAccount);
+        
+        userAccount = selectedAccount;
+        console.log('👤 Cuenta conectada:', userAccount);
+        console.log('📋 Estado después de asignar cuenta:', {
+            userAccount: userAccount,
+            web3: !!web3,
+            contractAddress: contractAddress
+        });
+        
+        // Verificar que estamos en Sepolia
+        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+        const networkId = parseInt(chainId, 16);
+        
+        if (networkId !== 11155111) {
+            console.log('🔄 Cambiando a Sepolia...');
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xaa36a7' }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0xaa36a7',
+                            chainName: 'Sepolia',
+                            nativeCurrency: {
+                                name: 'Sepolia Ether',
+                                symbol: 'SEP',
+                                decimals: 18
+                            },
+                            rpcUrls: ['https://sepolia.infura.io/v3/d435f483f92e4b898b203517d0d5e9bf'],
+                            blockExplorerUrls: ['https://sepolia.etherscan.io']
+                        }]
+                    });
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+        
+        // Inicializar Web3
+        web3 = new Web3(window.ethereum);
+        
+        // Inicializar contrato
+        const contractInitialized = await initializeContract();
+        
+        if (!contractInitialized) {
+            hideLoading();
+            showError('Error al inicializar el contrato. Verifica la conexión a la red.');
+            return;
+        }
+        
+        // Actualizar UI
+        updateWalletUI();
+        await loadUserData();
+        
+        // Escuchar cambios de cuenta
+        window.ethereum.on('accountsChanged', handleAccountChange);
+        window.ethereum.on('chainChanged', handleChainChange);
+        
+        hideLoading();
+        showSuccess('Wallet conectada exitosamente');
+        
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Error conectando cuenta seleccionada:', error);
+        
+        if (error.code === 4001) {
+            showError('Conexión cancelada por el usuario.');
+        } else if (error.code === -32002) {
+            showError('Por favor, desbloquea MetaMask y vuelve a intentar.');
+        } else if (error.message.includes('User rejected')) {
+            showError('Conexión rechazada por el usuario.');
+        } else {
+            showError('Error al conectar cuenta: ' + error.message);
+        }
+    }
 }
 
 // Exponer funciones globalmente para debug
