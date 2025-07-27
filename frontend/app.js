@@ -951,10 +951,17 @@ async function connectWallet() {
         if (!window.ethereum) {
             console.log('❌ MetaMask no detectado en desktop');
             
-            // Detectar si estamos en móvil
+            // Detectar si estamos en móvil y específicamente iOS
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isChrome = /Chrome/i.test(navigator.userAgent);
             
-            if (isMobile) {
+            if (isIOS && isChrome) {
+                console.log('📱 Detectado iOS en Chrome - MetaMask no funciona en Chrome iOS');
+                hideLoading();
+                showIOSChromeInstructions();
+                return;
+            } else if (isMobile) {
                 console.log('📱 Detectado dispositivo móvil');
                 hideLoading();
                 showMobileMetaMaskInstructions();
@@ -1765,6 +1772,72 @@ window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
 window.showLoading = showLoading;
+
+// Función para mostrar instrucciones específicas para iOS en Chrome
+function showIOSChromeInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'iosChromeModal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>📱 iOS + Chrome = Problema</h3>
+            <p>MetaMask no funciona en Chrome en iOS. Necesitas usar Safari o la app de MetaMask:</p>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">🚀 Opción 1: Usar Safari</h4>
+                <ol>
+                    <li>Abre Safari en tu iPhone/iPad</li>
+                    <li>Ve a esta misma web: <strong>big-bang-token.vercel.app</strong></li>
+                    <li>Instala MetaMask desde App Store</li>
+                    <li>Haz clic en "Conectar Wallet"</li>
+                    <li>MetaMask se abrirá automáticamente</li>
+                </ol>
+            </div>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">📱 Opción 2: Usar MetaMask App</h4>
+                <ol>
+                    <li>Instala MetaMask desde App Store</li>
+                    <li>Abre la app MetaMask</li>
+                    <li>Ve a la pestaña "Browser"</li>
+                    <li>Navega a: <strong>big-bang-token.vercel.app</strong></li>
+                    <li>Haz clic en "Conectar Wallet"</li>
+                </ol>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
+                    📥 Descargar MetaMask para iOS
+                </a>
+            </div>
+            
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="closeModal('iosChromeModal')">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal('iosChromeModal');
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal('iosChromeModal');
+        }
+    });
+}
 
 // Función para mostrar instrucciones específicas para móviles
 function showMobileMetaMaskInstructions() {

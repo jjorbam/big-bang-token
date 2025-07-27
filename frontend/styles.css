@@ -523,6 +523,67 @@ body::before {
     }
 }
 
+/* Estilos para modal de iOS Chrome */
+#iosChromeModal .modal-content {
+    max-width: 600px;
+    padding: 30px;
+}
+
+#iosChromeModal h3 {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#iosChromeModal h4 {
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+#iosChromeModal ol {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+#iosChromeModal li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+#iosChromeModal strong {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+#iosChromeModal .btn {
+    margin: 5px;
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+    #iosChromeModal .modal-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    #iosChromeModal h3 {
+        font-size: 18px;
+    }
+    
+    #iosChromeModal h4 {
+        font-size: 16px;
+    }
+    
+    #iosChromeModal ol {
+        font-size: 14px;
+    }
+    
+    #iosChromeModal .btn {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}
+
 /* Logo principal en el header */
 .logo-icon {
     width: 32px;
