@@ -949,10 +949,21 @@ async function connectWallet() {
         
         // Verificar si MetaMask está instalado
         if (!window.ethereum) {
-            console.log('❌ MetaMask no detectado');
-            hideLoading();
-            showMetaMaskInstallInstructions();
-            return;
+            console.log('❌ MetaMask no detectado en desktop');
+            
+            // Detectar si estamos en móvil
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            if (isMobile) {
+                console.log('📱 Detectado dispositivo móvil');
+                hideLoading();
+                showMobileMetaMaskInstructions();
+                return;
+            } else {
+                hideLoading();
+                showMetaMaskInstallInstructions();
+                return;
+            }
         }
 
         console.log('✅ MetaMask detectado, solicitando cuentas...');
@@ -1754,6 +1765,92 @@ window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
 window.showLoading = showLoading;
+
+// Función para mostrar instrucciones específicas para móviles
+function showMobileMetaMaskInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'mobileMetaMaskModal';
+    
+    const userAgent = navigator.userAgent;
+    let deviceType = 'móvil';
+    let downloadLink = '';
+    let instructions = '';
+    
+    if (/Android/i.test(userAgent)) {
+        deviceType = 'Android';
+        downloadLink = 'https://play.google.com/store/apps/details?id=io.metamask';
+        instructions = `
+            <ol>
+                <li>Abre Google Play Store en tu dispositivo Android</li>
+                <li>Busca "MetaMask" o usa el enlace directo</li>
+                <li>Instala la aplicación MetaMask</li>
+                <li>Abre MetaMask y crea una nueva wallet</li>
+                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
+                <li>MetaMask se abrirá automáticamente</li>
+            </ol>
+        `;
+    } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+        deviceType = 'iOS';
+        downloadLink = 'https://apps.apple.com/app/metamask/id1438144202';
+        instructions = `
+            <ol>
+                <li>Abre App Store en tu dispositivo iOS</li>
+                <li>Busca "MetaMask" o usa el enlace directo</li>
+                <li>Instala la aplicación MetaMask</li>
+                <li>Abre MetaMask y crea una nueva wallet</li>
+                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
+                <li>MetaMask se abrirá automáticamente</li>
+            </ol>
+        `;
+    } else {
+        downloadLink = 'https://metamask.io/download/';
+        instructions = `
+            <ol>
+                <li>Instala MetaMask en tu dispositivo móvil</li>
+                <li>Crea una nueva wallet en MetaMask</li>
+                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
+                <li>MetaMask se abrirá automáticamente</li>
+            </ol>
+        `;
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>📱 MetaMask en ${deviceType}</h3>
+            <p>Para conectar tu wallet en ${deviceType}, necesitas instalar la aplicación MetaMask:</p>
+            ${instructions}
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="${downloadLink}" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
+                    📥 Descargar MetaMask para ${deviceType}
+                </a>
+            </div>
+            <div style="text-align: center; margin-top: 15px;">
+                <button class="btn btn-secondary" onclick="closeModal('mobileMetaMaskModal')">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal('mobileMetaMaskModal');
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal('mobileMetaMaskModal');
+        }
+    });
+}
 
 // Función para mostrar instrucciones de instalación de MetaMask
 function showMetaMaskInstallInstructions() {

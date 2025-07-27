@@ -476,6 +476,53 @@ body::before {
     }
 }
 
+/* Estilos para modal de MetaMask móvil */
+#mobileMetaMaskModal .modal-content {
+    max-width: 500px;
+    padding: 30px;
+}
+
+#mobileMetaMaskModal h3 {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#mobileMetaMaskModal ol {
+    margin: 20px 0;
+    padding-left: 20px;
+}
+
+#mobileMetaMaskModal li {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+#mobileMetaMaskModal .btn {
+    margin: 5px;
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+    #mobileMetaMaskModal .modal-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    #mobileMetaMaskModal h3 {
+        font-size: 18px;
+    }
+    
+    #mobileMetaMaskModal ol {
+        font-size: 14px;
+    }
+    
+    #mobileMetaMaskModal .btn {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}
+
 /* Logo principal en el header */
 .logo-icon {
     width: 32px;
