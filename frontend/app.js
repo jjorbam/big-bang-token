@@ -1545,71 +1545,28 @@ async function showAccountSelector(accounts, targetWallet) {
         
         // Crear modal
         const modal = document.createElement('div');
-        modal.className = 'modal';
+        modal.className = 'account-selector-modal';
         modal.id = 'accountSelectorModal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            backdrop-filter: blur(5px);
-        `;
         
         // Crear contenido del modal
         const modalContent = document.createElement('div');
-        modalContent.className = 'modal-content';
-        modalContent.style.cssText = `
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            border: 2px solid #00d4ff;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.3);
-            animation: fadeIn 0.3s ease-out;
-        `;
+        modalContent.className = 'account-selector-content';
         
         // Título
         const title = document.createElement('h3');
+        title.className = 'account-selector-title';
         title.textContent = '🔗 Selecciona tu Wallet';
-        title.style.cssText = `
-            color: #00d4ff;
-            margin: 0 0 20px 0;
-            font-size: 24px;
-            text-align: center;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
-        `;
         modalContent.appendChild(title);
         
         // Descripción
         const description = document.createElement('p');
+        description.className = 'account-selector-description';
         description.textContent = 'Elige la cuenta que quieres usar para conectar:';
-        description.style.cssText = `
-            color: #ffffff;
-            text-align: center;
-            margin-bottom: 25px;
-            font-size: 16px;
-        `;
         modalContent.appendChild(description);
         
         // Lista de cuentas
         const accountList = document.createElement('div');
-        accountList.className = 'account-list';
-        accountList.style.cssText = `
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 25px;
-        `;
+        accountList.className = 'account-selector-list';
         
         // Agregar cada cuenta
         accounts.forEach((account, index) => {
@@ -1617,250 +1574,91 @@ async function showAccountSelector(accounts, targetWallet) {
             const shortAddress = account.slice(0, 6) + '...' + account.slice(-4);
             
             const accountItem = document.createElement('div');
-            accountItem.className = `account-item ${isTarget ? 'target-account' : ''}`;
-            accountItem.style.cssText = `
-                background: ${isTarget ? 'linear-gradient(135deg, #00d4ff20, #00d4ff10)' : 'linear-gradient(135deg, #ffffff10, #ffffff05)'};
-                border: 2px solid ${isTarget ? '#00d4ff' : '#ffffff30'};
-                border-radius: 10px;
-                padding: 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                transition: all 0.3s ease;
-                cursor: pointer;
-            `;
+            accountItem.className = `account-selector-item ${isTarget ? 'target-account' : ''}`;
             
             // Información de la cuenta
             const accountInfo = document.createElement('div');
-            accountInfo.style.cssText = 'flex: 1;';
             
             const accountAddress = document.createElement('div');
-            accountAddress.className = 'account-address';
+            accountAddress.className = 'account-selector-address';
             accountAddress.textContent = shortAddress;
-            accountAddress.style.cssText = `
-                color: #ffffff;
-                font-size: 18px;
-                font-weight: 600;
-                margin-bottom: 5px;
-            `;
             accountInfo.appendChild(accountAddress);
             
-            // Badge para wallet objetivo
+            // Badge para cuenta objetivo
             if (isTarget) {
-                const targetBadge = document.createElement('div');
-                targetBadge.className = 'target-badge';
-                targetBadge.textContent = '🎯 Wallet Objetivo';
-                targetBadge.style.cssText = `
-                    background: linear-gradient(135deg, #00d4ff, #0099cc);
-                    color: #000;
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    font-size: 12px;
-                    font-weight: bold;
-                    display: inline-block;
-                `;
-                accountInfo.appendChild(targetBadge);
+                const badge = document.createElement('span');
+                badge.className = 'account-selector-badge';
+                badge.textContent = 'Recomendada';
+                accountInfo.appendChild(badge);
             }
             
             accountItem.appendChild(accountInfo);
             
-            // Botón seleccionar
-            const selectButton = document.createElement('button');
-            selectButton.className = 'btn btn-primary select-account';
-            selectButton.setAttribute('data-account', account);
-            selectButton.textContent = 'Seleccionar';
-            selectButton.style.cssText = `
-                background: linear-gradient(135deg, #00d4ff, #0099cc);
-                color: #000;
-                border: none;
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                min-width: 120px;
-            `;
-            accountItem.appendChild(selectButton);
+            // Evento click
+            accountItem.addEventListener('click', () => {
+                console.log('✅ Cuenta seleccionada:', account);
+                closeModal();
+                resolve(account);
+            });
             
             accountList.appendChild(accountItem);
         });
         
         modalContent.appendChild(accountList);
         
-        // Acciones del modal
-        const modalActions = document.createElement('div');
-        modalActions.className = 'modal-actions';
-        modalActions.style.cssText = `
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        `;
+        // Botones de acción
+        const actions = document.createElement('div');
+        actions.className = 'account-selector-actions';
         
-        const cancelButton = document.createElement('button');
-        cancelButton.className = 'btn btn-secondary';
-        cancelButton.id = 'cancelSelection';
-        cancelButton.textContent = 'Cancelar';
-        cancelButton.style.cssText = `
-            background: linear-gradient(135deg, #ff4444, #cc0000);
-            color: #ffffff;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        `;
-        modalActions.appendChild(cancelButton);
-        
-        modalContent.appendChild(modalActions);
-        modal.appendChild(modalContent);
-        
-        console.log('📋 Modal creado, agregando al DOM...');
-        document.body.appendChild(modal);
-        console.log('✅ Modal agregado al DOM');
-        
-        // Función para cerrar modal y limpiar
-        function closeModal() {
-            console.log('🔒 Cerrando modal...');
-            if (document.body.contains(modal)) {
-                document.body.removeChild(modal);
-                console.log('✅ Modal removido del DOM');
-            }
-        }
-        
-        // Agregar event listeners
-        const selectButtons = modal.querySelectorAll('.select-account');
-        console.log('📋 Agregando event listeners a', selectButtons.length, 'botones');
-        
-        selectButtons.forEach((button, index) => {
-            button.addEventListener('click', async () => {
-                const selectedAccount = button.getAttribute('data-account');
-                console.log('✅ Cuenta seleccionada:', selectedAccount);
-                
-                // Cerrar modal primero
-                closeModal();
-                
-                // Conectar con la cuenta seleccionada
-                await connectSelectedAccount(selectedAccount);
-                resolve(selectedAccount);
-            });
-        });
-        
-        // Botón cancelar
-        cancelButton.addEventListener('click', () => {
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'account-selector-btn cancel';
+        cancelBtn.textContent = 'Cancelar';
+        cancelBtn.addEventListener('click', () => {
             console.log('❌ Selección cancelada');
             closeModal();
             resolve(null);
         });
         
-        // Cerrar al hacer clic fuera del modal
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                console.log('❌ Modal cerrado por clic fuera');
-                closeModal();
-                resolve(null);
+        actions.appendChild(cancelBtn);
+        modalContent.appendChild(actions);
+        
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        // Función para cerrar modal
+        function closeModal() {
+            const modal = document.getElementById('accountSelectorModal');
+            if (modal) {
+                modal.remove();
             }
-        });
+        }
         
         // Cerrar con Escape
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
-                console.log('❌ Modal cerrado con Escape');
                 closeModal();
-                document.removeEventListener('keydown', handleEscape);
                 resolve(null);
+                document.removeEventListener('keydown', handleEscape);
             }
         };
+        
         document.addEventListener('keydown', handleEscape);
         
-        console.log('✅ Modal de selector de cuentas listo');
+        // Cerrar al hacer click fuera del modal
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+                resolve(null);
+            }
+        });
     });
 }
-
-async function connectSelectedAccount(selectedAccount) {
-    try {
-        showLoading('Conectando cuenta seleccionada...');
-        
-        userAccount = selectedAccount;
-        console.log('👤 Cuenta conectada:', userAccount);
-        
-        // Verificar que estamos en Sepolia
-        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-        const networkId = parseInt(chainId, 16);
-        
-        if (networkId !== 11155111) {
-            console.log('🔄 Cambiando a Sepolia...');
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0xaa36a7' }],
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: '0xaa36a7',
-                            chainName: 'Sepolia',
-                            nativeCurrency: {
-                                name: 'Sepolia Ether',
-                                symbol: 'SEP',
-                                decimals: 18
-                            },
-                            rpcUrls: ['https://sepolia.infura.io/v3/d435f483f92e4b898b203517d0d5e9bf'],
-                            blockExplorerUrls: ['https://sepolia.etherscan.io']
-                        }]
-                    });
-                } else {
-                    throw switchError;
-                }
-            }
-        }
-        
-        // Inicializar Web3
-        web3 = new Web3(window.ethereum);
-        
-        // Inicializar contrato
-        const contractInitialized = await initializeContract();
-        
-        if (!contractInitialized) {
-            hideLoading();
-            showError('Error al inicializar el contrato. Verifica la conexión a la red.');
-            return;
-        }
-        
-        // Actualizar UI
-        updateWalletUI();
-        await loadUserData();
-        
-        // Escuchar cambios de cuenta
-        window.ethereum.on('accountsChanged', handleAccountChange);
-        window.ethereum.on('chainChanged', handleChainChange);
-        
-        hideLoading();
-        showSuccess('Wallet conectada exitosamente');
-        
-    } catch (error) {
-        hideLoading();
-        console.error('❌ Error conectando cuenta seleccionada:', error);
-        
-        if (error.code === 4001) {
-            showError('Conexión cancelada por el usuario.');
-        } else if (error.code === -32002) {
-            showError('Por favor, desbloquea MetaMask y vuelve a intentar.');
-        } else if (error.message.includes('User rejected')) {
-            showError('Conexión rechazada por el usuario.');
-        } else {
-            showError('Error al conectar cuenta: ' + error.message);
-        }
-    }
-} 
 
 // Exponer funciones globalmente para debug
 window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
-window.showLoading = showLoading; 
+window.showLoading = showLoading;
 
 // Función de debug para verificar el estado
 function debugApp() {
@@ -1921,4 +1719,5 @@ function debugApp() {
 }
 
 // Exponer función de debug globalmente
+window.debugApp = debugApp; 
 window.debugApp = debugApp; 
