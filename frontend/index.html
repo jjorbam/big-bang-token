@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIG BANG Token - Plataforma de Staking Futurista</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg class="logo-icon" width="32" height="32" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#111" d="M669.7,269.8l-10-3-33-6-27-6-14-5-14-8-8-8-6-10-12-29-11-21-10-15-11-14-9-9-12-11-14-11-18-11-22-10-23-7-24-4h-39l-9,1-24,5-18,6-23,11-16,10-17,13-1,3h-2l-10,10-11,13-10,13-10,16-10,19-10,17-6,7-10,9-11,7-16,7-17,5-27,5-50,6-24,4-9,4,1,5,10,3,22,3,64,6,33,4,18,4,11,5,9,8,6,11,11,26,12,22,12,17,8,9,7,8,7,6,11,9,17,12,21,11,19,7,22,6,24,3h28l11-1,12-2,23-6,18-7,19-10,15-10,14-11,13-13,13-15,13-19,12-24,7-20,6-21,5-5,10-4,18-3,45-4,22-3,10-3,2-4-3-3ZM512.7,291.8l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3h2v10ZM513.7,271.8l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18Z"/>
+                        <path class="st0" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                    </svg>
+                    <span>BIG BANG Token</span>
+                </div>
+                
+                <div class="wallet-section">
+                    <!-- Language Selector -->
+                    <div class="language-selector">
+                        <select id="languageSelect" class="language-select">
+                            <option value="es">🇪🇸 Español</option>
+                            <option value="en">🇺🇸 English</option>
+                            <option value="pt">🇵🇹 Português</option>
+
+                        </select>
+                    </div>
+                    
+                    <button id="connectWallet" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i>
+                        <span data-i18n="connect_wallet">Conectar Wallet</span>
+                    </button>
+                    <div id="walletInfo" class="wallet-info" style="display: none;">
+                        <span id="walletAddress"></span>
+                        <button id="disconnectWallet" class="btn btn-secondary">
+                            <i class="fas fa-power-off"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-secondary" onclick="debugWallet()" style="margin-left: 10px;">
+                        🔧 Debug Wallet
+                    </button>
+                    <button class="btn btn-secondary" onclick="debugApp()" style="margin-left: 10px;">
+                        🔍 Debug App
+                    </button>
+                    
+                    <!-- Mobile Menu Toggle -->
+                    <button id="menuToggle" class="menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+                
+                <nav class="nav" id="mobileNav">
+                    <a href="#dashboard" class="nav-link active" data-i18n="dashboard">Dashboard</a>
+                    <a href="#staking" class="nav-link" data-i18n="staking">Staking</a>
+                    <a href="#transfer" class="nav-link" data-i18n="transfer">Transferir</a>
+                    <a href="#info" class="nav-link" data-i18n="info">Información</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <div class="token-logo-large">
+                        <svg class="logo-icon-large" width="80" height="80" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#111" d="M669.7,269.8l-10-3-33-6-27-6-14-5-14-8-8-8-6-10-12-29-11-21-10-15-11-14-9-9-12-11-14-11-18-11-22-10-23-7-24-4h-39l-9,1-24,5-18,6-23,11-16,10-17,13-1,3h-2l-10,10-11,13-10,13-10,16-10,19-10,17-6,7-10,9-11,7-16,7-17,5-27,5-50,6-24,4-9,4,1,5,10,3,22,3,64,6,33,4,18,4,11,5,9,8,6,11,11,26,12,22,12,17,8,9,7,8,7,6,11,9,17,12,21,11,19,7,22,6,24,3h28l11-1,12-2,23-6,18-7,19-10,15-10,14-11,13-13,13-15,13-19,12-24,7-20,6-21,5-5,10-4,18-3,45-4,22-3,10-3,2-4-3-3ZM512.7,291.8l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3h2v10ZM513.7,271.8l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18Z"/>
+                            <path class="st0" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                        </svg>
+                    </div>
+                    <h1>BIG BANG Token</h1>
+                    <p data-i18n="stake_tokens_description">Gestiona tus tokens BBNG y monitorea tu portfolio</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Token Balance Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="token-logo-small">
+                                <svg class="logo-icon-small" width="24" height="24" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill="#111" d="M669.7,269.8l-10-3-33-6-27-6-14-5-14-8-8-8-6-10-12-29-11-21-10-15-11-14-9-9-12-11-14-11-18-11-22-10-23-7-24-4h-39l-9,1-24,5-18,6-23,11-16,10-17,13-1,3h-2l-10,10-11,13-10,13-10,16-10,19-10,17-6,7-10,9-11,7-16,7-17,5-27,5-50,6-24,4-9,4,1,5,10,3,22,3,64,6,33,4,18,4,11,5,9,8,6,11,11,26,12,22,12,17,8,9,7,8,7,6,11,9,17,12,21,11,19,7,22,6,24,3h28l11-1,12-2,23-6,18-7,19-10,15-10,14-11,13-13,13-15,13-19,12-24,7-20,6-21,5-5,10-4,18-3,45-4,22-3,10-3,2-4-3-3ZM512.7,291.8l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3h2v10ZM513.7,271.8l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18Z"/>
+                                    <path class="st0" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                                </svg>
+                            </div>
+                            <h3 data-i18n="token_balance">Balance de Tokens</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="balance-info">
+                                <span class="balance-amount" id="tokenBalance">0</span>
+                                <span class="balance-symbol">BBNG</span>
+                            </div>
+                            <div class="balance-details">
+                                <p><span data-i18n="estimated_value">Valor estimado</span>: <span id="tokenValue">$0.00</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Staking Summary Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-lock"></i>
+                            <h3 data-i18n="active_staking">Staking Activo</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="staking-summary">
+                                <div class="staking-stat">
+                                    <span class="stat-label" data-i18n="total_staked">Total en Staking</span>
+                                    <span class="stat-value" id="totalStaked">0 BBNG</span>
+                                </div>
+                                <div class="staking-stat">
+                                    <span class="stat-label" data-i18n="pending_rewards">Recompensas Pendientes</span>
+                                    <span class="stat-value" id="pendingRewards">0 BBNG</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Network Info Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-network-wired"></i>
+                            <h3 data-i18n="network_info">Información de Red</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="network-info">
+                                <p><span data-i18n="network">Red</span>: <span id="networkName">No conectado</span></p>
+                                <p><span data-i18n="contract">Contrato</span>: <span id="contractAddress">-</span></p>
+                                <p><span data-i18n="total_supply">Supply Total</span>: <span id="totalSupply">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i>
+                        <h3 data-i18n="recent_activity">Actividad Reciente</h3>
+                    </div>
+                    <div class="card-content">
+                        <div id="recentActivity" class="activity-list">
+                            <p class="no-data" data-i18n="no_recent_activity">No hay actividad reciente</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Staking Section -->
+            <section id="staking" class="section">
+                <div class="section-header">
+                    <div class="token-logo-large">
+                        <svg class="logo-icon-large" width="80" height="80" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Logo oficial de BIG BANG -->
+                            <path fill="#111" d="M352.7,81.8h39l24,4,23,7,22,10,18,11,14,11,12,11,9,9,11,14,10,15,11,21,12,29,6,10,8,8,14,8,14,5,27,6,33,6,10,3,3,3-2,4-10,3-22,3-45,4-18,3-10,4-5,5-6,21-7,20-12,24-13,19-13,15-13,13-14,11-15,10-19,10-18,7-23,6-12,2-11,1h-28l-24-3-22-6-19-7-21-11-17-12-11-9-7-6-7-8-8-9-12-17-12-22-11-26-6-11-9-8-11-5-18-4-33-4-64-6-22-3-10-3-1-5,9-4,24-4,50-6,27-5,17-5,16-7,11-7,10-9,6-7,10-17,10-19,10-16,10-13,11-13,10-10h2l1-3,17-13,16-10,23-11,18-6,24-5,9-1Z"/>
+                            <path fill="#fcfcfc" d="M364.7,128.8h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1Z"/>
+                            <path fill="#fcfcfc" d="M510.7,281.8h2v10l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3Z"/>
+                            <path fill="#111" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                        </svg>
+                    </div>
+                    <h1 data-i18n="staking_tokens">Staking de Tokens</h1>
+                    <p data-i18n="stake_tokens_description">Haz staking de tus tokens BBNG y gana recompensas</p>
+                </div>
+
+                <div class="staking-container">
+                    <!-- Staking Form -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-plus-circle"></i>
+                            <h3 data-i18n="new_stake">Nuevo Stake</h3>
+                        </div>
+                        <div class="card-content">
+                            <form id="stakingForm" class="staking-form">
+                                <div class="form-group">
+                                    <label for="stakeAmount" data-i18n="stake_amount">Cantidad de Tokens</label>
+                                    <div class="input-group">
+                                        <input type="number" id="stakeAmount" placeholder="0.0" step="0.01" min="0">
+                                        <button type="button" id="maxAmount" class="btn btn-secondary" data-i18n="max">MAX</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="stakePeriod" data-i18n="stake_period">Período de Staking</label>
+                                    <select id="stakePeriod" class="form-select">
+                                        <option value="30" data-i18n="days_30">30 días - 5% APY</option>
+                                        <option value="90" data-i18n="days_90">90 días - 10% APY</option>
+                                        <option value="180" data-i18n="days_180">180 días - 15% APY</option>
+                                        <option value="365" data-i18n="days_365">365 días - 20% APY</option>
+                                    </select>
+                                </div>
+
+                                <div class="staking-preview">
+                                    <div class="preview-item">
+                                        <span data-i18n="estimated_reward">Recompensa estimada</span>:
+                                        <span id="estimatedReward">0 BBNG</span>
+                                    </div>
+                                    <div class="preview-item">
+                                        <span data-i18n="end_date">Fecha de finalización</span>:
+                                        <span id="endDate">-</span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-full">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span data-i18n="make_staking">Hacer Staking</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Active Stakes -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-list"></i>
+                            <h3 data-i18n="active_stakes">Stakes Activos</h3>
+                        </div>
+                        <div class="card-content">
+                            <div id="activeStakes" class="stakes-list">
+                                <p class="no-data" data-i18n="no_active_stakes">No tienes stakes activos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transfer Section -->
+            <section id="transfer" class="section">
+                <div class="section-header">
+                    <div class="token-logo-large">
+                        <svg class="logo-icon-large" width="80" height="80" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Logo oficial de BIG BANG -->
+                            <path fill="#111" d="M352.7,81.8h39l24,4,23,7,22,10,18,11,14,11,12,11,9,9,11,14,10,15,11,21,12,29,6,10,8,8,14,8,14,5,27,6,33,6,10,3,3,3-2,4-10,3-22,3-45,4-18,3-10,4-5,5-6,21-7,20-12,24-13,19-13,15-13,13-14,11-15,10-19,10-18,7-23,6-12,2-11,1h-28l-24-3-22-6-19-7-21-11-17-12-11-9-7-6-7-8-8-9-12-17-12-22-11-26-6-11-9-8-11-5-18-4-33-4-64-6-22-3-10-3-1-5,9-4,24-4,50-6,27-5,17-5,16-7,11-7,10-9,6-7,10-17,10-19,10-16,10-13,11-13,10-10h2l1-3,17-13,16-10,23-11,18-6,24-5,9-1Z"/>
+                            <path fill="#fcfcfc" d="M364.7,128.8h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1Z"/>
+                            <path fill="#fcfcfc" d="M510.7,281.8h2v10l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3Z"/>
+                            <path fill="#111" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                        </svg>
+                    </div>
+                    <h1 data-i18n="transfer_tokens">Transferir Tokens</h1>
+                    <p data-i18n="transfer_description">Envía tokens BBNG a otras direcciones</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-paper-plane"></i>
+                                                    <h3 data-i18n="new_transfer">Nueva Transferencia</h3>
+                    </div>
+                    <div class="card-content">
+                        <form id="transferForm" class="transfer-form">
+                            <div class="form-group">
+                                <label for="recipientAddress" data-i18n="recipient_address">Dirección Destinatario</label>
+                                <input type="text" id="recipientAddress" placeholder="0x..." class="form-input">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="transferAmount" data-i18n="amount">Cantidad</label>
+                                <div class="input-group">
+                                    <input type="number" id="transferAmount" placeholder="0.0" step="0.01" min="0">
+                                    <button type="button" id="maxTransfer" class="btn btn-secondary" data-i18n="max">MAX</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <i class="fas fa-satellite"></i>
+                                <span data-i18n="transfer">Transferir</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Section -->
+            <section id="info" class="section">
+                <div class="section-header">
+                    <div class="token-logo-large">
+                        <svg class="logo-icon-large" width="80" height="80" viewBox="0 0 684.5 486.6" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Logo oficial de BIG BANG -->
+                            <path fill="#111" d="M352.7,81.8h39l24,4,23,7,22,10,18,11,14,11,12,11,9,9,11,14,10,15,11,21,12,29,6,10,8,8,14,8,14,5,27,6,33,6,10,3,3,3-2,4-10,3-22,3-45,4-18,3-10,4-5,5-6,21-7,20-12,24-13,19-13,15-13,13-14,11-15,10-19,10-18,7-23,6-12,2-11,1h-28l-24-3-22-6-19-7-21-11-17-12-11-9-7-6-7-8-8-9-12-17-12-22-11-26-6-11-9-8-11-5-18-4-33-4-64-6-22-3-10-3-1-5,9-4,24-4,50-6,27-5,17-5,16-7,11-7,10-9,6-7,10-17,10-19,10-16,10-13,11-13,10-10h2l1-3,17-13,16-10,23-11,18-6,24-5,9-1Z"/>
+                            <path fill="#fcfcfc" d="M364.7,128.8h16l17,2,20,5,19,8,14,8,12,9,12,11,10,11,10,15,6,10,6,14,6,23,1,9v18l-18-2-40-4-43-2h-181v-12l3-16,7-21,9-17,10-14,12-14,10-9,14-10,16-9,18-7,23-5,11-1Z"/>
+                            <path fill="#fcfcfc" d="M510.7,281.8h2v10l-6,22-8,18-10,16-11,14-13,13-18,13-14,8-21,8-18,4-8,1h-27l-19-3-17-5-16-7-13-8-11-8-10-9-10-10-11-15-9-16-7-19-3-12v-7h164l48-2,38-3,28-3Z"/>
+                            <path fill="#111" d="M122.7,28.8h15l15,4,11,6,11,10,7,11,4,8,2,8v21l-4,13-5,9-7,9-12,9-11,5-8,2h-20l-16-5-11-7-9-9-8-14-3-9-1-6v-15l4-15,7-12,8-9,10-7,15-6,6-1Z"/>
+                        </svg>
+                    </div>
+                    <h1 data-i18n="token_information">Información del Token</h1>
+                    <p data-i18n="token_info_description">Detalles técnicos y estadísticas del contrato BIG BANG</p>
+                </div>
+
+                <div class="info-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle"></i>
+                            <h3 data-i18n="general_info">Información General</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span data-i18n="name">Nombre</span>:
+                                <span>BIG BANG</span>
+                            </div>
+                            <div class="info-item">
+                                <span data-i18n="symbol">Símbolo</span>:
+                                <span>BBNG</span>
+                            </div>
+                            <div class="info-item">
+                                <span data-i18n="decimals">Decimales</span>:
+                                <span>18</span>
+                            </div>
+                            <div class="info-item">
+                                <span data-i18n="max_supply">Supply Máximo</span>:
+                                <span id="maxSupply">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-area"></i>
+                            <h3 data-i18n="staking_statistics">Estadísticas de Staking</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-item">
+                                <span data-i18n="total_staked_global">Total en Staking</span>:
+                                <span id="globalTotalStaked">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span data-i18n="participants">Participantes</span>:
+                                <span id="totalStakers">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span data-i18n="average_apy">APY Promedio</span>:
+                                <span>12.5%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-bolt"></i>
+                            <h3 data-i18n="reward_rates">Tasas de Recompensa</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="reward-rates">
+                                <div class="rate-item">
+                                    <span data-i18n="days_30">30 días</span>:
+                                    <span>5% APY</span>
+                                </div>
+                                <div class="rate-item">
+                                    <span data-i18n="days_90">90 días</span>:
+                                    <span>10% APY</span>
+                                </div>
+                                <div class="rate-item">
+                                    <span data-i18n="days_180">180 días</span>:
+                                    <span>15% APY</span>
+                                </div>
+                                <div class="rate-item">
+                                    <span data-i18n="days_365">365 días</span>:
+                                    <span>20% APY</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Botón de emergencia para limpiar modales -->
+    <button id="emergencyCleanup" style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 12px; display: none;" onclick="emergencyCleanup()">
+        🧹 Limpiar
+    </button>
+
+    <!-- Modal de loading -->
+    <div id="loadingModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="loading-spinner"></div>
+            <h3>Procesando...</h3>
+            <p id="loadingMessage">Conectando wallet...</p>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h3 data-i18n="success">¡Éxito!</h3>
+            <p id="successMessage" data-i18n="transaction_completed">Transacción completada exitosamente</p>
+            <button class="btn btn-primary" onclick="closeModal('successModal')" data-i18n="accept">Aceptar</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <h3 data-i18n="error">Error</h3>
+            <p id="errorMessage" data-i18n="an_error_occurred">Ha ocurrido un error</p>
+            <button class="btn btn-primary" onclick="closeModal('errorModal')" data-i18n="accept">Aceptar</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="config.js"></script>
+    <script src="translations.js"></script>
+    <script src="debug-wallet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html> 
