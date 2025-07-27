@@ -955,11 +955,17 @@ async function connectWallet() {
             const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
             const isChrome = /Chrome/i.test(navigator.userAgent);
+            const isSafari = /Safari/i.test(navigator.userAgent) && !/Chrome/i.test(navigator.userAgent);
             
             if (isIOS && isChrome) {
                 console.log('📱 Detectado iOS en Chrome - MetaMask no funciona en Chrome iOS');
                 hideLoading();
                 showIOSChromeInstructions();
+                return;
+            } else if (isIOS && isSafari) {
+                console.log('📱 Detectado iOS en Safari - MetaMask no funciona en Safari iOS');
+                hideLoading();
+                showIOSSafariInstructions();
                 return;
             } else if (isMobile) {
                 console.log('📱 Detectado dispositivo móvil');
@@ -1772,6 +1778,72 @@ window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
 window.showLoading = showLoading;
+
+// Función para mostrar instrucciones específicas para iOS en Safari
+function showIOSSafariInstructions() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'iosSafariModal';
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h3>📱 iOS + Safari = MetaMask App</h3>
+            <p>En iOS, MetaMask solo funciona desde la aplicación MetaMask. Necesitas usar la app:</p>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">📱 Usar MetaMask App</h4>
+                <ol>
+                    <li>Instala MetaMask desde App Store</li>
+                    <li>Abre la aplicación MetaMask</li>
+                    <li>Ve a la pestaña "Browser" (Navegador)</li>
+                    <li>Escribe en la barra de direcciones: <strong>big-bang-token.vercel.app</strong></li>
+                    <li>Navega a la web desde MetaMask</li>
+                    <li>Haz clic en "Conectar Wallet"</li>
+                    <li>La conexión funcionará automáticamente</li>
+                </ol>
+            </div>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">🔗 Enlaces Directos</h4>
+                <p>Descarga MetaMask para iOS:</p>
+                <div style="text-align: center; margin: 15px 0;">
+                    <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
+                        📥 App Store - MetaMask
+                    </a>
+                </div>
+            </div>
+            
+            <div style="background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 15px;">💡 ¿Por qué no funciona en Safari?</h4>
+                <p>Apple restringe el acceso a wallets en Safari iOS por seguridad. Solo las apps nativas pueden acceder a MetaMask.</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeModal('iosSafariModal')">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal('iosSafariModal');
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    document.addEventListener('keydown', handleEscape);
+    
+    // Cerrar al hacer clic fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal('iosSafariModal');
+        }
+    });
+}
 
 // Función para mostrar instrucciones específicas para iOS en Chrome
 function showIOSChromeInstructions() {

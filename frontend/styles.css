@@ -584,6 +584,67 @@ body::before {
     }
 }
 
+/* Estilos para modal de iOS Safari */
+#iosSafariModal .modal-content {
+    max-width: 600px;
+    padding: 30px;
+}
+
+#iosSafariModal h3 {
+    color: var(--accent-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#iosSafariModal h4 {
+    color: var(--accent-color);
+    margin-bottom: 15px;
+}
+
+#iosSafariModal ol {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+#iosSafariModal li {
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+#iosSafariModal strong {
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+#iosSafariModal .btn {
+    margin: 5px;
+    text-decoration: none;
+}
+
+@media (max-width: 480px) {
+    #iosSafariModal .modal-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    #iosSafariModal h3 {
+        font-size: 18px;
+    }
+    
+    #iosSafariModal h4 {
+        font-size: 16px;
+    }
+    
+    #iosSafariModal ol {
+        font-size: 14px;
+    }
+    
+    #iosSafariModal .btn {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}
+
 /* Logo principal en el header */
 .logo-icon {
     width: 32px;
