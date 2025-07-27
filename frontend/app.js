@@ -963,9 +963,9 @@ async function connectWallet() {
                 showIOSChromeInstructions();
                 return;
             } else if (isIOS && isSafari) {
-                console.log('📱 Detectado iOS en Safari - Intentando conectar con MetaMask Mobile');
+                console.log('📱 Detectado iOS en Safari - Mostrando opciones de conexión');
                 hideLoading();
-                await tryConnectMetaMaskMobile();
+                showIOSSafariInstructions();
                 return;
             } else if (isMobile) {
                 console.log('📱 Detectado dispositivo móvil');
@@ -1784,15 +1784,26 @@ window.tryConnectMetaMaskMobile = tryConnectMetaMaskMobile;
 async function tryConnectMetaMaskMobile() {
     console.log('🔗 Intentando conectar con MetaMask Mobile...');
     
-    // Verificar si MetaMask Mobile está instalado
-    const metamaskInstalled = await checkMetaMaskMobileInstalled();
-    
-    if (metamaskInstalled) {
-        console.log('✅ MetaMask Mobile detectado, intentando deep link...');
-        await connectViaDeepLink();
-    } else {
-        console.log('❌ MetaMask Mobile no detectado, mostrando instrucciones...');
-        showIOSSafariInstructions();
+    try {
+        showLoading('Conectando con MetaMask Mobile...');
+        
+        // Intentar deep link directamente sin verificar
+        const deepLink = `metamask://dapp/${encodeURIComponent(window.location.href)}`;
+        console.log('🔗 Deep link creado:', deepLink);
+        
+        // Intentar abrir MetaMask Mobile
+        window.location.href = deepLink;
+        
+        // Esperar un poco y mostrar mensaje
+        setTimeout(() => {
+            hideLoading();
+            showSuccess('MetaMask Mobile abierto. Por favor, confirma la conexión en la app.');
+        }, 2000);
+        
+    } catch (error) {
+        hideLoading();
+        console.error('❌ Error con deep link:', error);
+        showError('Error al conectar con MetaMask Mobile. Intenta desde la app directamente.');
     }
 }
 
@@ -1867,7 +1878,7 @@ function showIOSSafariInstructions() {
                 <h4 style="color: #00d4ff; margin-bottom: 15px;">🚀 Opción 1: Deep Link (Recomendado)</h4>
                 <p>Si tienes MetaMask instalado, intenta conectar directamente:</p>
                 <div style="text-align: center; margin: 15px 0;">
-                    <button class="btn btn-primary" onclick="tryConnectMetaMaskMobile()" style="margin: 10px;">
+                    <button class="btn btn-primary" id="deepLinkBtn" style="margin: 10px;">
                         🔗 Conectar con MetaMask Mobile
                     </button>
                 </div>
@@ -1903,6 +1914,15 @@ function showIOSSafariInstructions() {
     `;
     
     document.body.appendChild(modal);
+    
+    // Event listener para el botón de deep link
+    const deepLinkBtn = modal.querySelector('#deepLinkBtn');
+    if (deepLinkBtn) {
+        deepLinkBtn.addEventListener('click', async () => {
+            console.log('🔗 Botón de deep link presionado en Safari iOS');
+            await tryConnectMetaMaskMobile();
+        });
+    }
     
     // Cerrar con Escape
     const handleEscape = (e) => {
