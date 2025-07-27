@@ -945,7 +945,7 @@ async function connectWallet() {
         if (!window.ethereum) {
             console.log('❌ MetaMask no detectado');
             hideLoading();
-            showError('MetaMask no está instalado. Por favor instala MetaMask y recarga la página.');
+            showMetaMaskInstallInstructions();
             return;
         }
 
@@ -1659,6 +1659,193 @@ window.emergencyCleanup = emergencyCleanup;
 window.toggleEmergencyButton = toggleEmergencyButton;
 window.hideLoading = hideLoading;
 window.showLoading = showLoading;
+
+// Función para mostrar instrucciones de instalación de MetaMask
+function showMetaMaskInstallInstructions() {
+    console.log('📱 Detectando dispositivo móvil...');
+    
+    // Detectar si es móvil
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    // Crear modal de instrucciones
+    const modal = document.createElement('div');
+    modal.className = 'account-selector-modal';
+    modal.id = 'metaMaskInstallModal';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'account-selector-content';
+    
+    // Título
+    const title = document.createElement('h3');
+    title.className = 'account-selector-title';
+    title.textContent = '📱 Instalar MetaMask';
+    modalContent.appendChild(title);
+    
+    // Descripción
+    const description = document.createElement('p');
+    description.className = 'account-selector-description';
+    description.textContent = 'Para usar BIG BANG Token, necesitas instalar MetaMask en tu dispositivo:';
+    modalContent.appendChild(description);
+    
+    // Instrucciones específicas por dispositivo
+    const instructions = document.createElement('div');
+    instructions.className = 'meta-mask-instructions';
+    instructions.style.cssText = `
+        margin: 20px 0;
+        text-align: left;
+    `;
+    
+    if (isMobile) {
+        if (isIOS) {
+            instructions.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #00d4ff; margin-bottom: 10px;">🍎 Para iPhone/iPad:</h4>
+                    <ol style="color: #ffffff; line-height: 1.6;">
+                        <li>Abre la App Store en tu dispositivo</li>
+                        <li>Busca "MetaMask"</li>
+                        <li>Descarga e instala la aplicación</li>
+                        <li>Abre MetaMask y crea una nueva wallet</li>
+                        <li>Vuelve a esta página y conecta tu wallet</li>
+                    </ol>
+                    <div style="margin-top: 15px;">
+                        <a href="https://apps.apple.com/app/metamask/id1438144202" 
+                           target="_blank" 
+                           style="background: linear-gradient(135deg, #00d4ff, #0099cc); 
+                                  color: #000; 
+                                  padding: 10px 20px; 
+                                  border-radius: 8px; 
+                                  text-decoration: none; 
+                                  font-weight: bold;
+                                  display: inline-block;">
+                            📱 Descargar MetaMask para iOS
+                        </a>
+                    </div>
+                </div>
+            `;
+        } else if (isAndroid) {
+            instructions.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #00d4ff; margin-bottom: 10px;">🤖 Para Android:</h4>
+                    <ol style="color: #ffffff; line-height: 1.6;">
+                        <li>Abre Google Play Store en tu dispositivo</li>
+                        <li>Busca "MetaMask"</li>
+                        <li>Descarga e instala la aplicación</li>
+                        <li>Abre MetaMask y crea una nueva wallet</li>
+                        <li>Vuelve a esta página y conecta tu wallet</li>
+                    </ol>
+                    <div style="margin-top: 15px;">
+                        <a href="https://play.google.com/store/apps/details?id=io.metamask" 
+                           target="_blank" 
+                           style="background: linear-gradient(135deg, #00d4ff, #0099cc); 
+                                  color: #000; 
+                                  padding: 10px 20px; 
+                                  border-radius: 8px; 
+                                  text-decoration: none; 
+                                  font-weight: bold;
+                                  display: inline-block;">
+                            📱 Descargar MetaMask para Android
+                        </a>
+                    </div>
+                </div>
+            `;
+        } else {
+            instructions.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #00d4ff; margin-bottom: 10px;">📱 Para Dispositivo Móvil:</h4>
+                    <ol style="color: #ffffff; line-height: 1.6;">
+                        <li>Busca "MetaMask" en tu tienda de aplicaciones</li>
+                        <li>Descarga e instala la aplicación</li>
+                        <li>Abre MetaMask y crea una nueva wallet</li>
+                        <li>Vuelve a esta página y conecta tu wallet</li>
+                    </ol>
+                </div>
+            `;
+        }
+    } else {
+        // Instrucciones para desktop
+        instructions.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">💻 Para Desktop:</h4>
+                <ol style="color: #ffffff; line-height: 1.6;">
+                    <li>Ve a <a href="https://metamask.io" target="_blank" style="color: #00d4ff;">metamask.io</a></li>
+                    <li>Descarga la extensión para tu navegador</li>
+                    <li>Instala y configura MetaMask</li>
+                    <li>Recarga esta página y conecta tu wallet</li>
+                </ol>
+                <div style="margin-top: 15px;">
+                    <a href="https://metamask.io/download/" 
+                       target="_blank" 
+                       style="background: linear-gradient(135deg, #00d4ff, #0099cc); 
+                              color: #000; 
+                              padding: 10px 20px; 
+                              border-radius: 8px; 
+                              text-decoration: none; 
+                              font-weight: bold;
+                              display: inline-block;">
+                        💻 Descargar MetaMask para Desktop
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+    
+    modalContent.appendChild(instructions);
+    
+    // Botones de acción
+    const actions = document.createElement('div');
+    actions.className = 'account-selector-actions';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'account-selector-btn cancel';
+    closeBtn.textContent = 'Cerrar';
+    closeBtn.addEventListener('click', () => {
+        closeModal();
+    });
+    
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'account-selector-btn';
+    retryBtn.textContent = 'Reintentar';
+    retryBtn.addEventListener('click', () => {
+        closeModal();
+        setTimeout(() => {
+            connectWallet();
+        }, 500);
+    });
+    
+    actions.appendChild(closeBtn);
+    actions.appendChild(retryBtn);
+    modalContent.appendChild(actions);
+    
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+    
+    // Función para cerrar modal
+    function closeModal() {
+        const modal = document.getElementById('metaMaskInstallModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    // Cerrar con Escape
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleEscape);
+        }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    
+    // Cerrar al hacer click fuera del modal
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+}
 
 // Función de debug para verificar el estado
 function debugApp() {
