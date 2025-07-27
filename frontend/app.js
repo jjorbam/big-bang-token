@@ -1011,7 +1011,7 @@ async function connectWallet() {
         console.log('✅ MetaMask detectado, solicitando cuentas...');
         console.log('📋 Tipo de ethereum:', typeof window.ethereum);
         console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
-        console.log('🚀 Versión de la app: 1.0.2 - Cache busting forzado');
+        console.log('🚀 Versión de la app: 1.0.3 - Cache busting forzado');
 
         // Timeout para evitar que se quede colgado
         const timeoutPromise = new Promise((_, reject) => {
