@@ -1706,7 +1706,7 @@ async function showAccountSelector(accounts, targetWallet) {
         
         // Agregar cada cuenta
         accounts.forEach((account, index) => {
-            const isTarget = account.toLowerCase() === targetWallet.toLowerCase();
+            const isTarget = targetWallet && account.toLowerCase() === targetWallet.toLowerCase();
             const shortAddress = account.slice(0, 6) + '...' + account.slice(-4);
             
             const accountItem = document.createElement('div');
