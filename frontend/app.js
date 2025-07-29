@@ -2150,7 +2150,7 @@ function showIOSChromeInstructions() {
 
 // Función para mostrar instrucciones específicas para móviles
 function showMobileMetaMaskInstructions() {
-    console.log('📱 Mostrando instrucciones para móvil con WalletConnect...');
+    console.log('📱 Mostrando instrucciones para móvil con Web3Modal...');
     
     const modalContent = `
         <div class="modal-content">
@@ -2158,17 +2158,17 @@ function showMobileMetaMaskInstructions() {
             <h4>Elige tu método preferido:</h4>
             
             <div style="margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 10px;">🎯 Opción 1: WalletConnect (Recomendado)</h4>
-                <p>Conecta con cualquier wallet móvil usando QR code:</p>
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">🎯 Opción 1: Web3Modal (Recomendado)</h4>
+                <p>Conecta con cualquier wallet móvil usando Web3Modal:</p>
                 <ul>
                     <li>MetaMask Mobile</li>
                     <li>Trust Wallet</li>
-                    <li>Rainbow</li>
                     <li>Coinbase Wallet</li>
-                    <li>Y más de 100 wallets</li>
+                    <li>WalletConnect</li>
+                    <li>Y más de 200 wallets</li>
                 </ul>
-                <button id="walletConnectBtn" class="btn btn-primary" style="margin: 10px 0;">
-                    🔗 Conectar con WalletConnect
+                <button id="web3ModalBtn" class="btn btn-primary" style="margin: 10px 0;">
+                    🔗 Conectar con Web3Modal
                 </button>
             </div>
             
@@ -2187,13 +2187,19 @@ function showMobileMetaMaskInstructions() {
             </div>
             
             <div style="margin: 20px 0;">
-                <h4 style="color: #00d4ff; margin-bottom: 10px;">📥 Descargar MetaMask</h4>
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">📥 Descargar Wallets</h4>
                 <div style="text-align: center;">
                     <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-secondary" style="margin: 5px;">
-                        📱 App Store
+                        📱 MetaMask iOS
                     </a>
                     <a href="https://play.google.com/store/apps/details?id=io.metamask" target="_blank" class="btn btn-secondary" style="margin: 5px;">
-                        🤖 Google Play
+                        🤖 MetaMask Android
+                    </a>
+                    <a href="https://apps.apple.com/app/trust-wallet/id1418479307" target="_blank" class="btn btn-secondary" style="margin: 5px;">
+                        📱 Trust Wallet iOS
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp" target="_blank" class="btn btn-secondary" style="margin: 5px;">
+                        🤖 Trust Wallet Android
                     </a>
                 </div>
             </div>
@@ -2218,14 +2224,14 @@ function showMobileMetaMaskInstructions() {
     
     // Agregar event listeners
     setTimeout(() => {
-        const walletConnectBtn = document.getElementById('walletConnectBtn');
+        const web3ModalBtn = document.getElementById('web3ModalBtn');
         const metamaskMobileBtn = document.getElementById('metamaskMobileBtn');
         
-        if (walletConnectBtn) {
-            walletConnectBtn.addEventListener('click', () => {
-                console.log('🔗 Botón WalletConnect presionado');
+        if (web3ModalBtn) {
+            web3ModalBtn.addEventListener('click', () => {
+                console.log('🔗 Botón Web3Modal presionado');
                 closeModal('mobileMetaMaskModal');
-                connectWithWalletConnect();
+                connectWithWeb3Modal();
             });
         }
         
@@ -2547,5 +2553,253 @@ async function connectWithWalletConnect() {
         console.error('❌ Error con WalletConnect:', error);
         hideLoading();
         showError('Error al conectar con WalletConnect: ' + error.message);
+    }
+}
+
+// Función para conectar con Web3Modal
+async function connectWithWeb3Modal() {
+    console.log('🔗 Intentando conectar con Web3Modal...');
+    
+    try {
+        showLoading('Conectando wallet...');
+        
+        // Configurar Web3Modal
+        const projectId = 'YOUR_PROJECT_ID'; // Obtener de https://cloud.walletconnect.com/
+        
+        // Configurar chains
+        const chains = [
+            {
+                id: 11155111, // Sepolia
+                name: 'Sepolia',
+                network: 'sepolia',
+                nativeCurrency: {
+                    name: 'Sepolia Ether',
+                    symbol: 'SEP',
+                    decimals: 18,
+                },
+                rpcUrls: {
+                    default: {
+                        http: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+                    },
+                    public: {
+                        http: ['https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+                    },
+                },
+            },
+            {
+                id: 1, // Ethereum Mainnet
+                name: 'Ethereum',
+                network: 'ethereum',
+                nativeCurrency: {
+                    name: 'Ether',
+                    symbol: 'ETH',
+                    decimals: 18,
+                },
+                rpcUrls: {
+                    default: {
+                        http: ['https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+                    },
+                    public: {
+                        http: ['https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'],
+                    },
+                },
+            }
+        ];
+        
+        // Configurar wallets
+        const wallets = [
+            {
+                id: 'metamask',
+                name: 'MetaMask',
+                icon: 'https://cdn.iconscout.com/icon/free/png-256/metamask-2728406-2261817.png',
+            },
+            {
+                id: 'walletconnect',
+                name: 'WalletConnect',
+                icon: 'https://cdn.iconscout.com/icon/free/png-256/walletconnect-2728406-2261817.png',
+            },
+            {
+                id: 'coinbase',
+                name: 'Coinbase Wallet',
+                icon: 'https://cdn.iconscout.com/icon/free/png-256/coinbase-2728406-2261817.png',
+            },
+            {
+                id: 'trust',
+                name: 'Trust Wallet',
+                icon: 'https://cdn.iconscout.com/icon/free/png-256/trustwallet-2728406-2261817.png',
+            }
+        ];
+        
+        // Crear modal personalizado de Web3Modal
+        const modalContent = `
+            <div class="modal-content" style="max-width: 500px;">
+                <h3>🔗 Conectar Wallet</h3>
+                <p>Elige tu wallet preferido:</p>
+                
+                <div class="wallet-options" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                    <button class="wallet-option" data-wallet="metamask" style="display: flex; align-items: center; padding: 15px; border: 1px solid #333; border-radius: 10px; background: #1a1a1a; color: white; cursor: pointer; transition: all 0.3s;">
+                        <img src="https://cdn.iconscout.com/icon/free/png-256/metamask-2728406-2261817.png" style="width: 32px; height: 32px; margin-right: 10px;">
+                        <span>MetaMask</span>
+                    </button>
+                    
+                    <button class="wallet-option" data-wallet="walletconnect" style="display: flex; align-items: center; padding: 15px; border: 1px solid #333; border-radius: 10px; background: #1a1a1a; color: white; cursor: pointer; transition: all 0.3s;">
+                        <img src="https://cdn.iconscout.com/icon/free/png-256/walletconnect-2728406-2261817.png" style="width: 32px; height: 32px; margin-right: 10px;">
+                        <span>WalletConnect</span>
+                    </button>
+                    
+                    <button class="wallet-option" data-wallet="coinbase" style="display: flex; align-items: center; padding: 15px; border: 1px solid #333; border-radius: 10px; background: #1a1a1a; color: white; cursor: pointer; transition: all 0.3s;">
+                        <img src="https://cdn.iconscout.com/icon/free/png-256/coinbase-2728406-2261817.png" style="width: 32px; height: 32px; margin-right: 10px;">
+                        <span>Coinbase Wallet</span>
+                    </button>
+                    
+                    <button class="wallet-option" data-wallet="trust" style="display: flex; align-items: center; padding: 15px; border: 1px solid #333; border-radius: 10px; background: #1a1a1a; color: white; cursor: pointer; transition: all 0.3s;">
+                        <img src="https://cdn.iconscout.com/icon/free/png-256/trustwallet-2728406-2261817.png" style="width: 32px; height: 32px; margin-right: 10px;">
+                        <span>Trust Wallet</span>
+                    </button>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeModal('web3Modal')">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Crear modal
+        const modal = document.createElement('div');
+        modal.id = 'web3Modal';
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.innerHTML = modalContent;
+        
+        // Agregar al DOM
+        document.body.appendChild(modal);
+        
+        // Agregar event listeners
+        setTimeout(() => {
+            const walletOptions = document.querySelectorAll('.wallet-option');
+            
+            walletOptions.forEach(option => {
+                option.addEventListener('click', async () => {
+                    const walletType = option.dataset.wallet;
+                    console.log('🔗 Wallet seleccionado:', walletType);
+                    
+                    closeModal('web3Modal');
+                    
+                    // Conectar según el tipo de wallet
+                    switch(walletType) {
+                        case 'metamask':
+                            await connectWithMetaMask();
+                            break;
+                        case 'walletconnect':
+                            await connectWithWalletConnect();
+                            break;
+                        case 'coinbase':
+                            await connectWithCoinbase();
+                            break;
+                        case 'trust':
+                            await connectWithTrustWallet();
+                            break;
+                        default:
+                            showError('Wallet no soportado');
+                    }
+                });
+                
+                // Hover effects
+                option.addEventListener('mouseenter', () => {
+                    option.style.background = '#333';
+                    option.style.borderColor = '#00d4ff';
+                });
+                
+                option.addEventListener('mouseleave', () => {
+                    option.style.background = '#1a1a1a';
+                    option.style.borderColor = '#333';
+                });
+            });
+        }, 100);
+        
+        // Cerrar con Escape
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                closeModal('web3Modal');
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        
+    } catch (error) {
+        console.error('❌ Error con Web3Modal:', error);
+        hideLoading();
+        showError('Error al conectar con Web3Modal: ' + error.message);
+    }
+}
+
+// Función para conectar con MetaMask
+async function connectWithMetaMask() {
+    console.log('🔗 Conectando con MetaMask...');
+    
+    if (!window.ethereum) {
+        showError('MetaMask no está instalado. Por favor instala MetaMask primero.');
+        return;
+    }
+    
+    try {
+        const accounts = await window.ethereum.request({
+            method: 'eth_requestAccounts'
+        });
+        
+        if (accounts.length > 0) {
+            await connectSelectedAccount(accounts[0]);
+        }
+    } catch (error) {
+        console.error('❌ Error con MetaMask:', error);
+        showError('Error al conectar con MetaMask: ' + error.message);
+    }
+}
+
+// Función para conectar con Coinbase Wallet
+async function connectWithCoinbase() {
+    console.log('🔗 Conectando con Coinbase Wallet...');
+    
+    try {
+        // Coinbase Wallet tiene su propio provider
+        if (window.ethereum && window.ethereum.isCoinbaseWallet) {
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+            
+            if (accounts.length > 0) {
+                await connectSelectedAccount(accounts[0]);
+            }
+        } else {
+            showError('Coinbase Wallet no está instalado. Por favor instala Coinbase Wallet primero.');
+        }
+    } catch (error) {
+        console.error('❌ Error con Coinbase Wallet:', error);
+        showError('Error al conectar con Coinbase Wallet: ' + error.message);
+    }
+}
+
+// Función para conectar con Trust Wallet
+async function connectWithTrustWallet() {
+    console.log('🔗 Conectando con Trust Wallet...');
+    
+    try {
+        // Trust Wallet usa el mismo provider que MetaMask
+        if (window.ethereum) {
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+            
+            if (accounts.length > 0) {
+                await connectSelectedAccount(accounts[0]);
+            }
+        } else {
+            showError('Trust Wallet no está instalado. Por favor instala Trust Wallet primero.');
+        }
+    } catch (error) {
+        console.error('❌ Error con Trust Wallet:', error);
+        showError('Error al conectar con Trust Wallet: ' + error.message);
     }
 }
