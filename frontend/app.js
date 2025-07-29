@@ -971,99 +971,68 @@ async function loadContractAddress() {
 
 // Conectar wallet
 async function connectWallet() {
-    console.log('🔗 Botón de conectar wallet presionado');
-    console.log('📋 Estado inicial:', {
-        ethereum: !!window.ethereum,
-        web3: !!web3,
-        userAccount: userAccount,
-        contractAddress: contractAddress
-    });
+    console.log('🔗 Botón conectar wallet clickeado');
     
-    // Verificar si MetaMask está disponible
+    // Detectar dispositivo
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isChrome = /Chrome/.test(navigator.userAgent);
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    
+    console.log('📱 Detección de dispositivo:');
+    console.log('   Móvil:', isMobile);
+    console.log('   iOS:', isIOS);
+    console.log('   Chrome:', isChrome);
+    console.log('   Safari:', isSafari);
+    
+    // Si no hay ethereum, mostrar instrucciones
     if (!window.ethereum) {
-        console.log('❌ MetaMask no detectado');
-        
-        if (isMobile) {
-            console.log('📱 Dispositivo móvil detectado - mostrando instrucciones específicas');
-            if (isIOS && isChrome) {
-                console.log('🍎 iOS Chrome detectado - MetaMask no funciona aquí');
-                showIOSChromeInstructions();
-            } else if (isIOS && isSafari) {
-                console.log('🍎 iOS Safari detectado - intentando deep link');
-                showIOSSafariInstructions();
-            } else {
-                console.log('📱 Android/otro móvil detectado - mostrando instrucciones móviles');
-                showMobileMetaMaskInstructions();
-            }
+        if (isIOS && isChrome) {
+            showIOSChromeInstructions();
+        } else if (isIOS && isSafari) {
+            showIOSSafariInstructions();
+        } else if (isMobile) {
+            showMobileMetaMaskInstructions();
         } else {
-            console.log('💻 Desktop detectado - mostrando instrucciones de instalación');
             showMetaMaskInstallInstructions();
         }
         return;
     }
-
-    console.log('✅ MetaMask detectado');
-    console.log('📋 Tipo de ethereum:', typeof window.ethereum);
-    console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
-    console.log('🚀 Versión de la app: 1.0.6 - Web3Modal implementado');
     
     try {
         showLoading('Conectando wallet...');
-        console.log('📋 Mostrando loading...');
         
+        // Solicitar cuentas
         console.log('✅ MetaMask detectado, solicitando cuentas...');
-
-        // Timeout para evitar que se quede colgado
-        const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout: MetaMask no respondió en 10 segundos')), 10000);
-        });
-
-        // Solicitar cuentas con timeout
-        const accountsPromise = window.ethereum.request({
-            method: 'eth_requestAccounts'
-        });
-
-        console.log('📋 Esperando respuesta de MetaMask...');
-        const accounts = await Promise.race([accountsPromise, timeoutPromise]);
-
-        if (!accounts || accounts.length === 0) {
-            console.log('❌ No se obtuvieron cuentas');
-            hideLoading();
-            showError('No se pudieron obtener las cuentas de MetaMask.');
-            return;
-        }
-
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
         console.log('📋 Cuentas disponibles:', accounts);
         
-        // Siempre mostrar el selector de cuentas
-        const targetWallet = '0x95bcea7c05a85b8de810e00b9c42f5b268029272';
-        console.log('🎯 Mostrando selector de cuentas...');
-        const selectedAccount = await showAccountSelector(accounts, targetWallet);
-        
-        if (!selectedAccount) {
-            console.log('❌ No se seleccionó ninguna cuenta');
+        if (accounts.length === 0) {
             hideLoading();
-            showError('No se seleccionó ninguna cuenta.');
+            showError('No se encontraron cuentas en MetaMask');
             return;
         }
         
-        console.log('✅ Cuenta seleccionada:', selectedAccount);
-        
-        // Conectar con la cuenta seleccionada
-        await connectSelectedAccount(selectedAccount);
+        // Si hay múltiples cuentas, mostrar selector
+        if (accounts.length > 1) {
+            console.log('🎯 Mostrando selector de cuentas...');
+            await showAccountSelector(accounts);
+        } else {
+            // Conectar directamente si solo hay una cuenta
+            await connectSelectedAccount(accounts[0]);
+        }
         
     } catch (error) {
         console.error('❌ Error conectando wallet:', error);
         hideLoading();
         
         if (error.code === 4001) {
-            showError('Conexión cancelada por el usuario.');
+            showError('Conexión cancelada por el usuario');
         } else if (error.code === -32002) {
-            showError('Por favor, desbloquea MetaMask y vuelve a intentar.');
-        } else if (error.message.includes('Timeout')) {
-            showError('MetaMask no respondió. Por favor, verifica que esté desbloqueado y vuelve a intentar.');
+            showError('MetaMask ya está procesando una solicitud. Por favor, revisa la extensión.');
         } else {
-            showError('Error al conectar con MetaMask: ' + error.message);
+            showError('Error al conectar: ' + error.message);
         }
     }
 }
@@ -2803,3 +2772,5 @@ async function connectWithTrustWallet() {
         showError('Error al conectar con Trust Wallet: ' + error.message);
     }
 }
+
+console.log('🚀 Versión de la app: 1.0.7 - Conexión simplificada');
