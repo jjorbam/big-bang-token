@@ -1005,7 +1005,7 @@ async function connectWallet() {
     console.log('✅ MetaMask detectado');
     console.log('📋 Tipo de ethereum:', typeof window.ethereum);
     console.log('📋 Métodos disponibles:', Object.keys(window.ethereum));
-    console.log('🚀 Versión de la app: 1.0.5 - Web3Modal implementado');
+    console.log('🚀 Versión de la app: 1.0.6 - Web3Modal implementado');
     
     try {
         showLoading('Conectando wallet...');
