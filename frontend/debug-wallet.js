@@ -172,13 +172,13 @@ async function checkWalletStatus() {
             console.log('❌ Error al obtener cuentas desbloqueadas:', error.message);
         }
 
-        // Verificar si la wallet objetivo está disponible
-        const targetWallet = '0x95bcea7c05a85b8de810e00b9c42f5b268029272';
-        const isTargetAvailable = accounts.includes(targetWallet);
-        console.log('🎯 Wallet objetivo disponible:', isTargetAvailable);
+        // Verificar cuentas disponibles (sin wallet específica por seguridad)
+        console.log('📋 Cuentas disponibles para conexión:', accounts.length);
         
-        if (!isTargetAvailable) {
-            console.log('❌ La wallet objetivo no está importada o no está desbloqueada');
+        if (accounts.length === 0) {
+            console.log('❌ No hay cuentas disponibles para conectar');
+        } else {
+            console.log('✅ Hay cuentas disponibles para conectar');
         }
 
     } catch (error) {
