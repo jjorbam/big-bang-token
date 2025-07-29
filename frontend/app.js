@@ -3,6 +3,7 @@ let web3;
 let bigBangContract;
 let userAccount;
 let contractAddress;
+let walletConnectProvider;
 
 // Detección de dispositivo
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1069,12 +1070,36 @@ async function connectWallet() {
 
 // Desconectar wallet
 function disconnectWallet() {
-    userAccount = null;
+    console.log('🔌 Desconectando wallet...');
+    
+    // Desconectar WalletConnect si está activo
+    if (walletConnectProvider) {
+        try {
+            walletConnectProvider.disconnect();
+            console.log('🔌 WalletConnect desconectado');
+        } catch (error) {
+            console.log('⚠️ Error desconectando WalletConnect:', error);
+        }
+        walletConnectProvider = null;
+    }
+    
+    // Limpiar variables
     web3 = null;
     bigBangContract = null;
+    userAccount = null;
+    
+    // Limpiar localStorage
+    localStorage.removeItem('userAccount');
+    localStorage.removeItem('metamask_connecting');
+    localStorage.removeItem('metamask_connect_time');
+    
+    // Actualizar UI
     updateWalletUI();
+    
+    // Limpiar datos del usuario
     clearUserData();
-    showSuccess('Wallet desconectada');
+    
+    console.log('✅ Wallet desconectado completamente');
 }
 
 // Inicializar contrato
@@ -2125,72 +2150,93 @@ function showIOSChromeInstructions() {
 
 // Función para mostrar instrucciones específicas para móviles
 function showMobileMetaMaskInstructions() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'mobileMetaMaskModal';
+    console.log('📱 Mostrando instrucciones para móvil con WalletConnect...');
     
-    const userAgent = navigator.userAgent;
-    let deviceType = 'móvil';
-    let downloadLink = '';
-    let instructions = '';
-    
-    if (/Android/i.test(userAgent)) {
-        deviceType = 'Android';
-        downloadLink = 'https://play.google.com/store/apps/details?id=io.metamask';
-        instructions = `
-            <ol>
-                <li>Abre Google Play Store en tu dispositivo Android</li>
-                <li>Busca "MetaMask" o usa el enlace directo</li>
-                <li>Instala la aplicación MetaMask</li>
-                <li>Abre MetaMask y crea una nueva wallet</li>
-                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
-                <li>MetaMask se abrirá automáticamente</li>
-            </ol>
-        `;
-    } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
-        deviceType = 'iOS';
-        downloadLink = 'https://apps.apple.com/app/metamask/id1438144202';
-        instructions = `
-            <ol>
-                <li>Abre App Store en tu dispositivo iOS</li>
-                <li>Busca "MetaMask" o usa el enlace directo</li>
-                <li>Instala la aplicación MetaMask</li>
-                <li>Abre MetaMask y crea una nueva wallet</li>
-                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
-                <li>MetaMask se abrirá automáticamente</li>
-            </ol>
-        `;
-    } else {
-        downloadLink = 'https://metamask.io/download/';
-        instructions = `
-            <ol>
-                <li>Instala MetaMask en tu dispositivo móvil</li>
-                <li>Crea una nueva wallet en MetaMask</li>
-                <li>Vuelve a esta web y haz clic en "Conectar Wallet"</li>
-                <li>MetaMask se abrirá automáticamente</li>
-            </ol>
-        `;
-    }
-    
-    modal.innerHTML = `
+    const modalContent = `
         <div class="modal-content">
-            <h3>📱 MetaMask en ${deviceType}</h3>
-            <p>Para conectar tu wallet en ${deviceType}, necesitas instalar la aplicación MetaMask:</p>
-            ${instructions}
-            <div style="text-align: center; margin-top: 20px;">
-                <a href="${downloadLink}" target="_blank" class="btn btn-primary" style="display: inline-block; margin: 10px;">
-                    📥 Descargar MetaMask para ${deviceType}
-                </a>
+            <h3>📱 Conectar Wallet en Móvil</h3>
+            <h4>Elige tu método preferido:</h4>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">🎯 Opción 1: WalletConnect (Recomendado)</h4>
+                <p>Conecta con cualquier wallet móvil usando QR code:</p>
+                <ul>
+                    <li>MetaMask Mobile</li>
+                    <li>Trust Wallet</li>
+                    <li>Rainbow</li>
+                    <li>Coinbase Wallet</li>
+                    <li>Y más de 100 wallets</li>
+                </ul>
+                <button id="walletConnectBtn" class="btn btn-primary" style="margin: 10px 0;">
+                    🔗 Conectar con WalletConnect
+                </button>
             </div>
-            <div style="text-align: center; margin-top: 15px;">
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">�� Opción 2: MetaMask Mobile</h4>
+                <p>Si tienes MetaMask instalado:</p>
+                <ol>
+                    <li>Abre la app MetaMask</li>
+                    <li>Ve a Configuración → Navegador</li>
+                    <li>Habilita el navegador interno</li>
+                    <li>Regresa aquí desde la app</li>
+                </ol>
+                <button id="metamaskMobileBtn" class="btn btn-secondary" style="margin: 10px 0;">
+                    📱 Usar MetaMask Mobile
+                </button>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h4 style="color: #00d4ff; margin-bottom: 10px;">📥 Descargar MetaMask</h4>
+                <div style="text-align: center;">
+                    <a href="https://apps.apple.com/app/metamask/id1438144202" target="_blank" class="btn btn-secondary" style="margin: 5px;">
+                        📱 App Store
+                    </a>
+                    <a href="https://play.google.com/store/apps/details?id=io.metamask" target="_blank" class="btn btn-secondary" style="margin: 5px;">
+                        🤖 Google Play
+                    </a>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
                 <button class="btn btn-secondary" onclick="closeModal('mobileMetaMaskModal')">
-                    Cerrar
+                    ❌ Cancelar
                 </button>
             </div>
         </div>
     `;
     
+    // Crear modal
+    const modal = document.createElement('div');
+    modal.id = 'mobileMetaMaskModal';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.innerHTML = modalContent;
+    
+    // Agregar al DOM
     document.body.appendChild(modal);
+    
+    // Agregar event listeners
+    setTimeout(() => {
+        const walletConnectBtn = document.getElementById('walletConnectBtn');
+        const metamaskMobileBtn = document.getElementById('metamaskMobileBtn');
+        
+        if (walletConnectBtn) {
+            walletConnectBtn.addEventListener('click', () => {
+                console.log('🔗 Botón WalletConnect presionado');
+                closeModal('mobileMetaMaskModal');
+                connectWithWalletConnect();
+            });
+        }
+        
+        if (metamaskMobileBtn) {
+            metamaskMobileBtn.addEventListener('click', () => {
+                console.log('📱 Botón MetaMask Mobile presionado');
+                closeModal('mobileMetaMaskModal');
+                tryConnectMetaMaskMobile();
+            });
+        }
+    }, 100);
     
     // Cerrar con Escape
     const handleEscape = (e) => {
@@ -2201,12 +2247,7 @@ function showMobileMetaMaskInstructions() {
     };
     document.addEventListener('keydown', handleEscape);
     
-    // Cerrar al hacer clic fuera del modal
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal('mobileMetaMaskModal');
-        }
-    });
+    console.log('✅ Modal de instrucciones móvil mostrado');
 }
 
 // Función para mostrar instrucciones de instalación de MetaMask
@@ -2457,3 +2498,54 @@ function debugApp() {
 // Exponer función de debug globalmente
 window.debugApp = debugApp; 
 window.debugApp = debugApp; 
+
+// Función para conectar con WalletConnect
+async function connectWithWalletConnect() {
+    console.log('🔗 Intentando conectar con WalletConnect...');
+    
+    try {
+        showLoading('Conectando con WalletConnect...');
+        
+        // Configurar WalletConnect
+        const provider = new WalletConnectProvider.default({
+            rpc: {
+                11155111: "https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161", // Sepolia
+                1: "https://mainnet.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161" // Mainnet
+            },
+            qrcode: true,
+            pollingInterval: 12000,
+        });
+        
+        // Conectar
+        await provider.enable();
+        
+        // Crear instancia de Web3
+        const web3Instance = new Web3(provider);
+        
+        // Obtener cuentas
+        const accounts = await web3Instance.eth.getAccounts();
+        
+        if (accounts.length === 0) {
+            throw new Error('No se obtuvieron cuentas de WalletConnect');
+        }
+        
+        console.log('✅ WalletConnect conectado:', accounts[0]);
+        
+        // Guardar provider para desconexión
+        walletConnectProvider = provider;
+        
+        // Conectar con la primera cuenta
+        await connectSelectedAccount(accounts[0]);
+        
+        // Escuchar desconexión
+        provider.on("disconnect", (code, reason) => {
+            console.log('🔌 WalletConnect desconectado:', reason);
+            disconnectWallet();
+        });
+        
+    } catch (error) {
+        console.error('❌ Error con WalletConnect:', error);
+        hideLoading();
+        showError('Error al conectar con WalletConnect: ' + error.message);
+    }
+}
