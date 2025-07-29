@@ -1176,17 +1176,34 @@ function updateWalletUI() {
     const walletAddress = document.getElementById('walletAddress');
     const adminDashboardBtn = document.getElementById('adminDashboardBtn');
     
-    if (userAccount) {
-        connectBtn.style.display = 'none';
-        walletInfo.style.display = 'flex';
+    // Verificar que los elementos existan antes de usarlos
+    if (connectBtn) {
+        if (userAccount) {
+            connectBtn.style.display = 'none';
+        } else {
+            connectBtn.style.display = 'flex';
+        }
+    }
+    
+    if (walletInfo) {
+        if (userAccount) {
+            walletInfo.style.display = 'flex';
+        } else {
+            walletInfo.style.display = 'none';
+        }
+    }
+    
+    if (walletAddress && userAccount) {
         walletAddress.textContent = `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
-        
-        // Verificar si es el owner para mostrar el botón de admin
-        checkIfOwner();
-    } else {
-        connectBtn.style.display = 'flex';
-        walletInfo.style.display = 'none';
-        adminDashboardBtn.style.display = 'none';
+    }
+    
+    if (adminDashboardBtn) {
+        if (userAccount) {
+            // Verificar si es el owner para mostrar el botón de admin
+            checkIfOwner();
+        } else {
+            adminDashboardBtn.style.display = 'none';
+        }
     }
 }
 
@@ -1198,13 +1215,15 @@ async function checkIfOwner() {
         const owner = await bigBangContract.methods.owner().call();
         const adminDashboardBtn = document.getElementById('adminDashboardBtn');
         
-        if (userAccount.toLowerCase() === owner.toLowerCase()) {
-            adminDashboardBtn.style.display = 'inline-block';
-            adminDashboardBtn.onclick = () => {
-                window.open('admin-dashboard.html', '_blank');
-            };
-        } else {
-            adminDashboardBtn.style.display = 'none';
+        if (adminDashboardBtn) {
+            if (userAccount.toLowerCase() === owner.toLowerCase()) {
+                adminDashboardBtn.style.display = 'inline-block';
+                adminDashboardBtn.onclick = () => {
+                    window.open('admin-dashboard.html', '_blank');
+                };
+            } else {
+                adminDashboardBtn.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Error verificando owner:', error);
