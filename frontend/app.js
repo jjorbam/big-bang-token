@@ -789,7 +789,18 @@ function initializeLanguage() {
     }
     
     // Aplicar idioma inicial
-    updatePageLanguage(savedLanguage);
+    if (typeof updatePageLanguage === 'function') {
+        updatePageLanguage(savedLanguage);
+    } else {
+        // Si no está disponible, intentar de nuevo en 100ms
+        setTimeout(() => {
+            if (typeof updatePageLanguage === 'function') {
+                updatePageLanguage(savedLanguage);
+            } else {
+                console.warn('⚠️ updatePageLanguage no disponible');
+            }
+        }, 100);
+    }
 }
 
 // Inicializar la aplicación
@@ -959,14 +970,32 @@ async function loadContractAddress() {
             contractAddress = window.CONFIG.CONTRACT_ADDRESS;
             console.log('📋 Contrato cargado desde config:', contractAddress);
         } else {
-            const response = await fetch('../contract-address.json');
-            if (response.ok) {
-                const data = await response.json();
-                contractAddress = data.address;
-                console.log('📋 Contrato cargado:', contractAddress);
-            } else {
+            // Intentar diferentes rutas para contract-address.json
+            const possiblePaths = [
+                '../contract-address.json',
+                './contract-address.json',
+                '/contract-address.json'
+            ];
+            
+            let contractLoaded = false;
+            for (const path of possiblePaths) {
+                try {
+                    const response = await fetch(path);
+                    if (response.ok) {
+                        const data = await response.json();
+                        contractAddress = data.address;
+                        console.log('📋 Contrato cargado desde', path, ':', contractAddress);
+                        contractLoaded = true;
+                        break;
+                    }
+                } catch (error) {
+                    console.log('⚠️ Error cargando desde', path, ':', error.message);
+                }
+            }
+            
+            if (!contractLoaded) {
                 console.log('⚠️ No se encontró contract-address.json, usando dirección por defecto');
-                contractAddress = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
+                contractAddress = '0x61CA5da746eE0D850d173F3b0116E464dd6D334e'; // Sepolia
             }
         }
         updateContractInfo();
