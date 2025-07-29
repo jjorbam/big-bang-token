@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Wallet Connection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #28a745; }
+        .error { background: #dc3545; }
+        .info { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Test de Conexión de Wallet</h1>
+    
+    <div class="test-section">
+        <h3>📋 Estado del Sistema</h3>
+        <div id="systemStatus" class="status info">Verificando...</div>
+        <button onclick="checkSystemStatus()">🔄 Verificar Estado</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔗 Conexión de Wallet</h3>
+        <button onclick="testConnectWallet()">🦊 Conectar MetaMask</button>
+        <button onclick="testConnectWalletImproved()">🔧 Conectar (Mejorado)</button>
+        <div id="connectionStatus" class="status info">Esperando conexión...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔍 Debug</h3>
+        <button onclick="debugWallet()">🔍 Debug Wallet</button>
+        <button onclick="debugApp()">🔍 Debug App</button>
+        <div id="debugOutput" class="status info">Debug output aparecerá aquí...</div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script src="config.js?v=1.0.7"></script>
+    <script src="wallet-connect-fix.js?v=1.0.8"></script>
+    <script src="app.js?v=1.0.8"></script>
+    
+    <script>
+        function checkSystemStatus() {
+            const statusDiv = document.getElementById('systemStatus');
+            statusDiv.innerHTML = 'Verificando...';
+            statusDiv.className = 'status info';
+            
+            setTimeout(() => {
+                let status = '✅ Sistema listo<br>';
+                status += `🌐 Hostname: ${window.location.hostname}<br>`;
+                status += `📱 Móvil: ${/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)}<br>`;
+                status += `🦊 MetaMask: ${window.ethereum ? 'Disponible' : 'No disponible'}<br>`;
+                status += `🔧 Función mejorada: ${typeof connectWalletImproved === 'function' ? 'Disponible' : 'No disponible'}<br>`;
+                status += `🔧 Función original: ${typeof connectWallet === 'function' ? 'Disponible' : 'No disponible'}`;
+                
+                statusDiv.innerHTML = status;
+                statusDiv.className = 'status success';
+            }, 1000);
+        }
+        
+        async function testConnectWallet() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = 'Conectando...';
+            statusDiv.className = 'status info';
+            
+            try {
+                if (typeof connectWallet === 'function') {
+                    await connectWallet();
+                    statusDiv.innerHTML = '✅ Conexión exitosa (función original)';
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.innerHTML = '❌ Función connectWallet no disponible';
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error: ' + error.message;
+                statusDiv.className = 'status error';
+            }
+        }
+        
+        async function testConnectWalletImproved() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.innerHTML = 'Conectando...';
+            statusDiv.className = 'status info';
+            
+            try {
+                if (typeof connectWalletImproved === 'function') {
+                    await connectWalletImproved();
+                    statusDiv.innerHTML = '✅ Conexión exitosa (función mejorada)';
+                    statusDiv.className = 'status success';
+                } else {
+                    statusDiv.innerHTML = '❌ Función connectWalletImproved no disponible';
+                    statusDiv.className = 'status error';
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error: ' + error.message;
+                statusDiv.className = 'status error';
+            }
+        }
+        
+        function debugWallet() {
+            const outputDiv = document.getElementById('debugOutput');
+            let debug = '🔍 DEBUG WALLET:<br>';
+            
+            if (typeof debugWalletConnection === 'function') {
+                debugWalletConnection();
+                debug += '✅ Función debugWalletConnection ejecutada (ver consola)<br>';
+            } else {
+                debug += '❌ Función debugWalletConnection no disponible<br>';
+            }
+            
+            debug += `🦊 window.ethereum: ${!!window.ethereum}<br>`;
+            if (window.ethereum) {
+                debug += `🦊 isMetaMask: ${window.ethereum.isMetaMask}<br>`;
+                debug += `🦊 isConnected: ${window.ethereum.isConnected()}<br>`;
+                debug += `🦊 selectedAddress: ${window.ethereum.selectedAddress || 'No seleccionada'}<br>`;
+            }
+            
+            outputDiv.innerHTML = debug;
+            outputDiv.className = 'status info';
+        }
+        
+        function debugApp() {
+            const outputDiv = document.getElementById('debugOutput');
+            let debug = '🔍 DEBUG APP:<br>';
+            
+            if (typeof debugApp === 'function') {
+                debugApp();
+                debug += '✅ Función debugApp ejecutada (ver consola)<br>';
+            } else {
+                debug += '❌ Función debugApp no disponible<br>';
+            }
+            
+            debug += `🌐 URL: ${window.location.href}<br>`;
+            debug += `📱 User Agent: ${navigator.userAgent}<br>`;
+            debug += `🔧 Web3: ${typeof Web3 !== 'undefined' ? 'Disponible' : 'No disponible'}`;
+            
+            outputDiv.innerHTML = debug;
+            outputDiv.className = 'status info';
+        }
+        
+        // Auto-check al cargar
+        window.addEventListener('load', () => {
+            checkSystemStatus();
+        });
+    </script>
+</body>
+</html> 

@@ -885,7 +885,14 @@ function setupEventListeners() {
     if (connectWalletBtn) {
         connectWalletBtn.addEventListener('click', function() {
             console.log('🔗 Botón conectar wallet clickeado');
-            connectWallet();
+            // Usar la función mejorada si está disponible
+            if (typeof connectWalletImproved === 'function') {
+                console.log('🔧 Usando función mejorada de conexión');
+                connectWalletImproved();
+            } else {
+                console.log('🔧 Usando función original de conexión');
+                connectWallet();
+            }
         });
         console.log('✅ Event listener agregado al botón conectar');
     } else {
