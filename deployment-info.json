@@ -1,0 +1,32 @@
+{
+  "project": "BIG BANG Token",
+  "version": "2.0.0",
+  "deployment_date": "2025-07-29T20:01:56.761Z",
+  "features": [
+    "ERC20 Token con staking",
+    "Dashboard de administración",
+    "Circuit breakers de seguridad",
+    "Funciones de emergencia",
+    "Configuración dinámica",
+    "Frontend responsivo",
+    "Multi-idioma"
+  ],
+  "networks": {
+    "testnet": "Sepolia",
+    "mainnet": "Ethereum"
+  },
+  "contract_address": "0x61CA5da746eE0D850d173F3b0116E464dd6D334e",
+  "admin_dashboard": "admin-dashboard.html",
+  "documentation": [
+    "docs/admin-dashboard-guide.md",
+    "docs/security-improvements.md",
+    "docs/phase-2-testing-plan.md"
+  ],
+  "deployment_steps": [
+    "1. Push a GitHub",
+    "2. Conectar repositorio a Vercel",
+    "3. Configurar variables de entorno",
+    "4. Deploy automático",
+    "5. Verificar funcionalidad"
+  ]
+}

@@ -1,6 +1,16 @@
 {
-  "address": "0x6C2455525Ac10CdDd5e36d498BE744EB98aB2a12",
+  "address": "0x61CA5da746eE0D850d173F3b0116E464dd6D334e",
   "network": "sepolia",
   "deployer": "0x95BCeA7C05a85B8de810e00B9c42f5B268029272",
-  "timestamp": "2025-07-27T15:43:38.285Z"
+  "timestamp": "2025-07-27T16:30:00.000Z",
+  "version": "2.0.0",
+  "security_features": [
+    "Circuit breakers",
+    "Reentrancy protection",
+    "Overflow protection",
+    "Emergency functions",
+    "Granular pausing"
+  ],
+  "tests_passed": "44/44",
+  "status": "deployed_with_security_improvements"
 }

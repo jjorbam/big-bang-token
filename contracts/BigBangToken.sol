@@ -10,12 +10,20 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuard {
     uint256 private constant MAX_SUPPLY = 21000000 * 10**18; // 21 millones de tokens con 18 decimales
     
+    // Circuit breakers y límites de seguridad
+    uint256 public maxStakeAmount = 1000000 * 10**18; // 1M tokens máximo por stake
+    uint256 public maxTotalStaked = 10000000 * 10**18; // 10M tokens máximo total en staking
+    bool public stakingPaused = false;
+    bool public unstakingPaused = false;
+    
     // Eventos para mejor seguimiento
     event TokensMinted(address indexed to, uint256 amount);
     event TokensBurned(address indexed from, uint256 amount);
     event Staked(address indexed user, uint256 amount, uint256 lockPeriod);
     event Unstaked(address indexed user, uint256 amount, uint256 reward);
     event RewardRateUpdated(uint256 newRewardRate);
+    event CircuitBreakerUpdated(string breaker, bool paused);
+    event LimitsUpdated(string limit, uint256 newValue);
     
     // Estructura para el staking
     struct StakeInfo {
@@ -88,7 +96,39 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
         _unpause();
     }
 
+    /**
+     * @dev Permite al propietario pausar/reanudar staking
+     */
+    function setStakingPaused(bool _paused) external onlyOwner {
+        stakingPaused = _paused;
+        emit CircuitBreakerUpdated("staking", _paused);
+    }
 
+    /**
+     * @dev Permite al propietario pausar/reanudar unstaking
+     */
+    function setUnstakingPaused(bool _paused) external onlyOwner {
+        unstakingPaused = _paused;
+        emit CircuitBreakerUpdated("unstaking", _paused);
+    }
+
+    /**
+     * @dev Permite al propietario actualizar límites de seguridad
+     */
+    function setMaxStakeAmount(uint256 _maxAmount) external onlyOwner {
+        require(_maxAmount > 0, "Max stake amount must be greater than zero");
+        maxStakeAmount = _maxAmount;
+        emit LimitsUpdated("maxStakeAmount", _maxAmount);
+    }
+
+    /**
+     * @dev Permite al propietario actualizar límite total de staking
+     */
+    function setMaxTotalStaked(uint256 _maxTotal) external onlyOwner {
+        require(_maxTotal > totalStaked, "Max total must be greater than current staked");
+        maxTotalStaked = _maxTotal;
+        emit LimitsUpdated("maxTotalStaked", _maxTotal);
+    }
 
     /**
      * @dev Sobreescribe la función burn para emitir el evento personalizado
@@ -119,15 +159,24 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
      * @param periodInDays Período de staking en días (debe ser uno de los períodos admitidos)
      */
     function stake(uint256 amount, uint256 periodInDays) external nonReentrant whenNotPaused {
+        require(!stakingPaused, "Staking is currently paused");
         require(amount > 0, "Staking amount must be greater than zero");
+        require(amount <= maxStakeAmount, "Staking amount exceeds maximum allowed");
         require(balanceOf(_msgSender()) >= amount, "Insufficient balance");
         require(isPeriodValid(periodInDays), "Invalid staking period");
+        require(totalStaked + amount <= maxTotalStaked, "Total staked would exceed maximum");
+        
+        // Validar que el período no sea extremo
+        require(periodInDays >= 30 && periodInDays <= 365, "Period must be between 30 and 365 days");
         
         // Transferir tokens al contrato
         _transfer(_msgSender(), address(this), amount);
         
         // Calcular tiempo de finalización
         uint256 endTime = block.timestamp + (periodInDays * 1 days);
+        
+        // Validar que endTime no sea extremo
+        require(endTime > block.timestamp, "Invalid end time");
         
         // Guardar información de staking
         stakes[_msgSender()].push(StakeInfo({
@@ -148,21 +197,27 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
      * @param stakeIndex Índice del stake en el array de stakes del usuario
      */
     function unstake(uint256 stakeIndex) external nonReentrant {
+        require(!unstakingPaused, "Unstaking is currently paused");
         require(stakeIndex < stakes[_msgSender()].length, "Invalid stake index");
         
         StakeInfo storage stakeInfo = stakes[_msgSender()][stakeIndex];
         require(!stakeInfo.claimed, "Stake already claimed");
         require(block.timestamp >= stakeInfo.endTime, "Staking period not finished");
         
-        // Marcar como reclamado
+        // Marcar como reclamado ANTES de las transferencias (reentrancy protection)
         stakeInfo.claimed = true;
         
-        // Calcular recompensa
+        // Calcular recompensa con validaciones
         uint256 stakingDays = (stakeInfo.endTime - stakeInfo.startTime) / 1 days;
+        require(stakingDays > 0, "Invalid staking period");
+        
         uint256 rewardRate = rewardRates[getClosestPeriod(stakingDays)];
         uint256 reward = calculateReward(stakeInfo.amount, stakingDays, rewardRate);
         
-        // Actualizar el total en staking
+        // Validar que la recompensa no sea excesiva
+        require(reward <= stakeInfo.amount * 2, "Reward too high"); // Máximo 200% de recompensa
+        
+        // Actualizar el total en staking ANTES de las transferencias
         totalStaked -= stakeInfo.amount;
         
         // Transferir tokens + recompensa
@@ -190,8 +245,16 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
      * @return La recompensa calculada
      */
     function calculateReward(uint256 amount, uint256 stakingDays, uint256 rate) public pure returns (uint256) {
+        // Validaciones de seguridad
+        require(amount > 0, "Amount must be greater than zero");
+        require(stakingDays > 0, "Staking days must be greater than zero");
+        require(rate > 0, "Rate must be greater than zero");
+        
+        // Prevenir overflow: usar SafeMath implícito de Solidity 0.8+
         // Recompensa = cantidad * (tasa / 10000) * (días / 365)
-        return (amount * rate * stakingDays) / (10000 * 365);
+        uint256 reward = (amount * rate * stakingDays) / (10000 * 365);
+        
+        return reward;
     }
     
     /**
@@ -242,6 +305,7 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
      */
     function updateRewardRate(uint256 periodInDays, uint256 newRate) external onlyOwner {
         require(isPeriodValid(periodInDays), "Invalid staking period");
+        require(newRate <= 5000, "Rate cannot exceed 50%"); // Máximo 50% APY
         rewardRates[periodInDays] = newRate;
         emit RewardRateUpdated(newRate);
     }
@@ -253,6 +317,8 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
      */
     function addStakingPeriod(uint256 periodInDays, uint256 rate) external onlyOwner {
         require(!isPeriodValid(periodInDays), "Period already exists");
+        require(periodInDays >= 30 && periodInDays <= 365, "Period must be between 30 and 365 days");
+        require(rate <= 5000, "Rate cannot exceed 50%"); // Máximo 50% APY
         stakingPeriods.push(periodInDays);
         rewardRates[periodInDays] = rate;
     }
@@ -264,5 +330,25 @@ contract BigBangToken is ERC20, ERC20Burnable, Pausable, Ownable, ReentrancyGuar
     function emergencyWithdraw(uint256 amount) external onlyOwner {
         require(amount <= ERC20(address(this)).balanceOf(address(this)) - totalStaked, "Cannot withdraw staked tokens");
         _transfer(address(this), _msgSender(), amount);
+    }
+    
+    /**
+     * @dev Función de emergencia para pausar todo el sistema
+     */
+    function emergencyPause() external onlyOwner {
+        _pause();
+        stakingPaused = true;
+        unstakingPaused = true;
+        emit CircuitBreakerUpdated("emergency", true);
+    }
+    
+    /**
+     * @dev Función de emergencia para reanudar el sistema
+     */
+    function emergencyUnpause() external onlyOwner {
+        _unpause();
+        stakingPaused = false;
+        unstakingPaused = false;
+        emit CircuitBreakerUpdated("emergency", false);
     }
 } 

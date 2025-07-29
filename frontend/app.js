@@ -1138,14 +1138,40 @@ function updateWalletUI() {
     const connectBtn = document.getElementById('connectWallet');
     const walletInfo = document.getElementById('walletInfo');
     const walletAddress = document.getElementById('walletAddress');
+    const adminDashboardBtn = document.getElementById('adminDashboardBtn');
     
     if (userAccount) {
         connectBtn.style.display = 'none';
         walletInfo.style.display = 'flex';
         walletAddress.textContent = `${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+        
+        // Verificar si es el owner para mostrar el botón de admin
+        checkIfOwner();
     } else {
         connectBtn.style.display = 'flex';
         walletInfo.style.display = 'none';
+        adminDashboardBtn.style.display = 'none';
+    }
+}
+
+// Verificar si el usuario conectado es el owner
+async function checkIfOwner() {
+    if (!bigBangContract || !userAccount) return;
+    
+    try {
+        const owner = await bigBangContract.methods.owner().call();
+        const adminDashboardBtn = document.getElementById('adminDashboardBtn');
+        
+        if (userAccount.toLowerCase() === owner.toLowerCase()) {
+            adminDashboardBtn.style.display = 'inline-block';
+            adminDashboardBtn.onclick = () => {
+                window.open('admin-dashboard.html', '_blank');
+            };
+        } else {
+            adminDashboardBtn.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error verificando owner:', error);
     }
 }
 

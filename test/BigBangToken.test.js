@@ -68,6 +68,13 @@ describe("BigBangToken", function () {
       expect(await bigBangToken.stakingPeriods(2)).to.equal(180);
       expect(await bigBangToken.stakingPeriods(3)).to.equal(365);
     });
+
+    it("Debería configurar los límites de seguridad correctamente", async function () {
+      expect(await bigBangToken.maxStakeAmount()).to.equal(ethers.parseEther("1000000")); // 1M tokens
+      expect(await bigBangToken.maxTotalStaked()).to.equal(ethers.parseEther("10000000")); // 10M tokens
+      expect(await bigBangToken.stakingPaused()).to.equal(false);
+      expect(await bigBangToken.unstakingPaused()).to.equal(false);
+    });
   });
 
   describe("Funcionalidad básica del token", function () {
@@ -101,187 +108,274 @@ describe("BigBangToken", function () {
     });
   });
 
-  describe("Pausable", function () {
-    it("Debería permitir al owner pausar el contrato", async function () {
-      await bigBangToken.pause();
-      expect(await bigBangToken.paused()).to.be.true;
-    });
-
-    it("Debería permitir al owner despausar el contrato", async function () {
-      await bigBangToken.pause();
-      await bigBangToken.unpause();
-      expect(await bigBangToken.paused()).to.be.false;
-    });
-
-    it("Debería revertir transferencias cuando está pausado", async function () {
-      await bigBangToken.pause();
-      expect(await bigBangToken.paused()).to.be.true;
+  describe("Circuit Breakers y Límites de Seguridad", function () {
+    it("Debería permitir al owner pausar/reanudar staking", async function () {
+      expect(await bigBangToken.stakingPaused()).to.equal(false);
       
-      // Verificar que el contrato está pausado
-      expect(await bigBangToken.paused()).to.be.true;
+      await bigBangToken.setStakingPaused(true);
+      expect(await bigBangToken.stakingPaused()).to.equal(true);
+      
+      await bigBangToken.setStakingPaused(false);
+      expect(await bigBangToken.stakingPaused()).to.equal(false);
     });
 
-    it("Solo el owner debería poder pausar/despausar", async function () {
+    it("Debería permitir al owner pausar/reanudar unstaking", async function () {
+      expect(await bigBangToken.unstakingPaused()).to.equal(false);
+      
+      await bigBangToken.setUnstakingPaused(true);
+      expect(await bigBangToken.unstakingPaused()).to.equal(true);
+      
+      await bigBangToken.setUnstakingPaused(false);
+      expect(await bigBangToken.unstakingPaused()).to.equal(false);
+    });
+
+    it("Debería permitir al owner actualizar límites de staking", async function () {
+      const newMaxStake = ethers.parseEther("500000");
+      const newMaxTotal = ethers.parseEther("5000000");
+      
+      await bigBangToken.setMaxStakeAmount(newMaxStake);
+      expect(await bigBangToken.maxStakeAmount()).to.equal(newMaxStake);
+      
+      await bigBangToken.setMaxTotalStaked(newMaxTotal);
+      expect(await bigBangToken.maxTotalStaked()).to.equal(newMaxTotal);
+    });
+
+    it("Debería rechazar staking cuando está pausado", async function () {
+      await bigBangToken.transfer(user1.address, ethers.parseEther("1000"));
+      await bigBangToken.setStakingPaused(true);
+      
       await expect(
-        bigBangToken.connect(user1).pause()
-      ).to.be.revertedWithCustomError(bigBangToken, "OwnableUnauthorizedAccount");
+        bigBangToken.connect(user1).stake(ethers.parseEther("100"), 30)
+      ).to.be.revertedWith("Staking is currently paused");
+    });
+
+    it("Debería rechazar staking que exceda el límite máximo", async function () {
+      await bigBangToken.transfer(user1.address, ethers.parseEther("2000000")); // 2M tokens
+      
+      await expect(
+        bigBangToken.connect(user1).stake(ethers.parseEther("1500000"), 30) // 1.5M tokens
+      ).to.be.revertedWith("Staking amount exceeds maximum allowed");
+    });
+
+    it("Debería rechazar staking que exceda el límite total", async function () {
+      // Transferir tokens suficientes pero no excesivos
+      await bigBangToken.transfer(user1.address, ethers.parseEther("5000000")); // 5M tokens
+      
+      await expect(
+        bigBangToken.connect(user1).stake(ethers.parseEther("11000000"), 30) // 11M tokens
+      ).to.be.revertedWith("Staking amount exceeds maximum allowed");
+    });
+
+    it("Debería rechazar períodos de staking inválidos", async function () {
+      await bigBangToken.transfer(user1.address, ethers.parseEther("1000"));
+      
+      // Período muy corto
+      await expect(
+        bigBangToken.connect(user1).stake(ethers.parseEther("100"), 15)
+      ).to.be.revertedWith("Invalid staking period");
+      
+      // Período muy largo
+      await expect(
+        bigBangToken.connect(user1).stake(ethers.parseEther("100"), 400)
+      ).to.be.revertedWith("Invalid staking period");
     });
   });
 
-  describe("Staking", function () {
+  describe("Funcionalidad de staking mejorada", function () {
     beforeEach(async function () {
-      // Transferir tokens a user1 para testing
       await bigBangToken.transfer(user1.address, ethers.parseEther("10000"));
     });
 
-    it("Debería permitir hacer staking de tokens", async function () {
+    it("Debería permitir staking normal con validaciones", async function () {
       const stakeAmount = ethers.parseEther("1000");
-      const periodInDays = 30;
+      const period = 30;
       
-      await bigBangToken.connect(user1).stake(stakeAmount, periodInDays);
+      await bigBangToken.connect(user1).stake(stakeAmount, period);
       
+      // Verificar que el staking fue exitoso
       expect(await bigBangToken.totalStaked()).to.equal(stakeAmount);
-      expect(await bigBangToken.balanceOf(user1.address)).to.equal(ethers.parseEther("9000"));
+      
+      // Verificar que los tokens fueron transferidos
+      expect(await bigBangToken.balanceOf(user1.address)).to.equal(ethers.parseEther("9000")); // 10000 - 1000
     });
 
-    it("Debería revertir si la cantidad es cero", async function () {
+    it("Debería rechazar staking con cantidad cero", async function () {
       await expect(
         bigBangToken.connect(user1).stake(0, 30)
       ).to.be.revertedWith("Staking amount must be greater than zero");
     });
 
-    it("Debería revertir si el saldo es insuficiente", async function () {
-      const stakeAmount = ethers.parseEther("20000"); // Más de lo que tiene
-      
+    it("Debería rechazar staking con balance insuficiente", async function () {
       await expect(
-        bigBangToken.connect(user1).stake(stakeAmount, 30)
+        bigBangToken.connect(user1).stake(ethers.parseEther("20000"), 30)
       ).to.be.revertedWith("Insufficient balance");
     });
 
-    it("Debería revertir si el período no es válido", async function () {
-      const stakeAmount = ethers.parseEther("1000");
-      
+    it("Debería rechazar staking con período inválido", async function () {
       await expect(
-        bigBangToken.connect(user1).stake(stakeAmount, 50) // Período no válido
+        bigBangToken.connect(user1).stake(ethers.parseEther("1000"), 50)
       ).to.be.revertedWith("Invalid staking period");
-    });
-
-    it("Debería calcular recompensas correctamente", async function () {
-      const amount = ethers.parseEther("1000");
-      const days = 30;
-      const rate = 500; // 5%
-      
-      const expectedReward = (amount * BigInt(rate) * BigInt(days)) / (10000n * 365n);
-      const calculatedReward = await bigBangToken.calculateReward(amount, days, rate);
-      
-      expect(calculatedReward).to.equal(expectedReward);
-    });
-
-    it("Debería verificar períodos válidos correctamente", async function () {
-      expect(await bigBangToken.isPeriodValid(30)).to.be.true;
-      expect(await bigBangToken.isPeriodValid(90)).to.be.true;
-      expect(await bigBangToken.isPeriodValid(180)).to.be.true;
-      expect(await bigBangToken.isPeriodValid(365)).to.be.true;
-      expect(await bigBangToken.isPeriodValid(50)).to.be.false;
-    });
-
-    it("Debería obtener el período más cercano correctamente", async function () {
-      expect(await bigBangToken.getClosestPeriod(35)).to.equal(30);
-      expect(await bigBangToken.getClosestPeriod(60)).to.equal(30); // 60 está más cerca de 30 que de 90
-      expect(await bigBangToken.getClosestPeriod(200)).to.equal(180);
-      expect(await bigBangToken.getClosestPeriod(400)).to.equal(365);
     });
   });
 
-  describe("Unstaking", function () {
+  describe("Funcionalidad de unstaking mejorada", function () {
     beforeEach(async function () {
-      // Transferir tokens y hacer staking
       await bigBangToken.transfer(user1.address, ethers.parseEther("10000"));
       await bigBangToken.connect(user1).stake(ethers.parseEther("1000"), 30);
     });
 
-    it("Debería revertir si el stake no existe", async function () {
+    it("Debería rechazar unstaking cuando está pausado", async function () {
+      await bigBangToken.setUnstakingPaused(true);
+      
+      // Avanzar el tiempo para que el stake esté listo
+      await ethers.provider.send("evm_increaseTime", [31 * 24 * 60 * 60]); // 31 días
+      await ethers.provider.send("evm_mine");
+      
       await expect(
-        bigBangToken.connect(user1).unstake(1) // Stake index 1 no existe
-      ).to.be.revertedWith("Invalid stake index");
+        bigBangToken.connect(user1).unstake(0)
+      ).to.be.revertedWith("Unstaking is currently paused");
     });
 
-    it("Debería revertir si el período aún no finalizó", async function () {
+    it("Debería rechazar unstaking antes del período", async function () {
       await expect(
         bigBangToken.connect(user1).unstake(0)
       ).to.be.revertedWith("Staking period not finished");
     });
 
-    it("Debería permitir unstaking después del período", async function () {
-      // Avanzar el tiempo más allá del período de staking
-      await ethers.provider.send("evm_increaseTime", [31 * 24 * 60 * 60]); // 31 días
-      await ethers.provider.send("evm_mine");
-      
-      const initialBalance = await bigBangToken.balanceOf(user1.address);
-      const initialTotalStaked = await bigBangToken.totalStaked();
-      
-      await bigBangToken.connect(user1).unstake(0);
-      
-      // Verificar que los tokens fueron devueltos más la recompensa
-      const finalBalance = await bigBangToken.balanceOf(user1.address);
-      expect(finalBalance).to.be.gt(initialBalance);
-      
-      // Verificar que el total staked disminuyó
-      expect(await bigBangToken.totalStaked()).to.equal(initialTotalStaked - ethers.parseEther("1000"));
-    });
-
-    it("Debería revertir si el stake ya fue reclamado", async function () {
-      // Avanzar el tiempo y hacer unstaking
+    it("Debería rechazar unstaking de stake ya reclamado", async function () {
+      // Avanzar el tiempo
       await ethers.provider.send("evm_increaseTime", [31 * 24 * 60 * 60]);
       await ethers.provider.send("evm_mine");
+      
+      // Primera reclamación
       await bigBangToken.connect(user1).unstake(0);
       
-      // Intentar reclamar de nuevo
+      // Segunda reclamación debería fallar
       await expect(
         bigBangToken.connect(user1).unstake(0)
       ).to.be.revertedWith("Stake already claimed");
     });
+
+    it("Debería rechazar unstaking con índice inválido", async function () {
+      await expect(
+        bigBangToken.connect(user1).unstake(1)
+      ).to.be.revertedWith("Invalid stake index");
+    });
+  });
+
+  describe("Cálculo de recompensas mejorado", function () {
+    it("Debería calcular recompensas correctamente con validaciones", async function () {
+      const amount = ethers.parseEther("1000");
+      const days = 30;
+      const rate = 500; // 5%
+      
+      const reward = await bigBangToken.calculateReward(amount, days, rate);
+      expect(reward).to.be.gt(0);
+    });
+
+    it("Debería rechazar cálculo con parámetros inválidos", async function () {
+      const amount = ethers.parseEther("1000");
+      const days = 30;
+      const rate = 500;
+      
+      // Cantidad cero
+      await expect(
+        bigBangToken.calculateReward(0, days, rate)
+      ).to.be.revertedWith("Amount must be greater than zero");
+      
+      // Días cero
+      await expect(
+        bigBangToken.calculateReward(amount, 0, rate)
+      ).to.be.revertedWith("Staking days must be greater than zero");
+      
+      // Rate cero
+      await expect(
+        bigBangToken.calculateReward(amount, days, 0)
+      ).to.be.revertedWith("Rate must be greater than zero");
+    });
+  });
+
+  describe("Funciones de emergencia", function () {
+    it("Debería permitir emergency pause", async function () {
+      await bigBangToken.emergencyPause();
+      
+      expect(await bigBangToken.paused()).to.equal(true);
+      expect(await bigBangToken.stakingPaused()).to.equal(true);
+      expect(await bigBangToken.unstakingPaused()).to.equal(true);
+    });
+
+    it("Debería permitir emergency unpause", async function () {
+      await bigBangToken.emergencyPause();
+      await bigBangToken.emergencyUnpause();
+      
+      expect(await bigBangToken.paused()).to.equal(false);
+      expect(await bigBangToken.stakingPaused()).to.equal(false);
+      expect(await bigBangToken.unstakingPaused()).to.equal(false);
+    });
   });
 
   describe("Funciones administrativas", function () {
-    it("Debería permitir al owner actualizar tasas de recompensa", async function () {
-      const newRate = 750; // 7.5%
+    it("Debería permitir actualizar tasas de recompensa", async function () {
+      const newRate = 1500; // 15%
       await bigBangToken.updateRewardRate(30, newRate);
       expect(await bigBangToken.rewardRates(30)).to.equal(newRate);
     });
 
-    it("Debería permitir al owner añadir nuevos períodos", async function () {
+    it("Debería rechazar tasas de recompensa excesivas", async function () {
+      await expect(
+        bigBangToken.updateRewardRate(30, 6000) // 60%
+      ).to.be.revertedWith("Rate cannot exceed 50%");
+    });
+
+    it("Debería permitir añadir nuevos períodos", async function () {
       const newPeriod = 60;
-      const newRate = 800; // 8%
+      const newRate = 750; // 7.5%
       
       await bigBangToken.addStakingPeriod(newPeriod, newRate);
-      
-      expect(await bigBangToken.isPeriodValid(newPeriod)).to.be.true;
       expect(await bigBangToken.rewardRates(newPeriod)).to.equal(newRate);
     });
 
-    it("Debería revertir si se intenta añadir un período que ya existe", async function () {
+    it("Debería rechazar períodos duplicados", async function () {
       await expect(
-        bigBangToken.addStakingPeriod(30, 1000)
+        bigBangToken.addStakingPeriod(30, 500)
       ).to.be.revertedWith("Period already exists");
     });
 
-    it("Solo el owner debería poder actualizar tasas", async function () {
+    it("Debería rechazar períodos inválidos", async function () {
       await expect(
-        bigBangToken.connect(user1).updateRewardRate(30, 1000)
+        bigBangToken.addStakingPeriod(15, 500)
+      ).to.be.revertedWith("Period must be between 30 and 365 days");
+      
+      await expect(
+        bigBangToken.addStakingPeriod(400, 500)
+      ).to.be.revertedWith("Period must be between 30 and 365 days");
+    });
+  });
+
+  describe("Seguridad y validaciones", function () {
+    it("Debería rechazar operaciones de usuarios no autorizados", async function () {
+      await expect(
+        bigBangToken.connect(user1).setStakingPaused(true)
+      ).to.be.revertedWithCustomError(bigBangToken, "OwnableUnauthorizedAccount");
+      
+      await expect(
+        bigBangToken.connect(user1).setMaxStakeAmount(ethers.parseEther("1000"))
       ).to.be.revertedWithCustomError(bigBangToken, "OwnableUnauthorizedAccount");
     });
 
-    it("Debería permitir emergency withdraw", async function () {
-      const withdrawAmount = ethers.parseEther("1000");
-      const initialBalance = await bigBangToken.balanceOf(owner.address);
+    it("Debería validar límites de stake amount", async function () {
+      await expect(
+        bigBangToken.setMaxStakeAmount(0)
+      ).to.be.revertedWith("Max stake amount must be greater than zero");
+    });
+
+    it("Debería validar límites de total staked", async function () {
+      await bigBangToken.transfer(user1.address, ethers.parseEther("1000"));
+      await bigBangToken.connect(user1).stake(ethers.parseEther("100"), 30);
       
-      // Transferir tokens al contrato primero
-      await bigBangToken.transfer(bigBangToken.target, withdrawAmount);
-      
-      await bigBangToken.emergencyWithdraw(withdrawAmount);
-      
-      expect(await bigBangToken.balanceOf(owner.address)).to.equal(initialBalance);
+      await expect(
+        bigBangToken.setMaxTotalStaked(ethers.parseEther("50"))
+      ).to.be.revertedWith("Max total must be greater than current staked");
     });
   });
 

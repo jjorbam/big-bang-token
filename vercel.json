@@ -1,0 +1,64 @@
+{
+  "version": 2,
+  "name": "big-bang-token",
+  "builds": [
+    {
+      "src": "frontend/**/*",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/frontend/index.html"
+    },
+    {
+      "src": "/admin-dashboard",
+      "dest": "/frontend/admin-dashboard.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    }
+  ],
+  "env": {
+    "CONTRACT_ADDRESS": "0x61CA5da746eE0D850d173F3b0116E464dd6D334e",
+    "NETWORK": "sepolia",
+    "PROJECT_NAME": "BIG BANG Token",
+    "VERSION": "2.0.0"
+  },
+  "functions": {
+    "frontend/**/*.js": {
+      "maxDuration": 10
+    }
+  },
+  "regions": ["iad1"],
+  "public": true
+} 
